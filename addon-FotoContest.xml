@@ -1,0 +1,2825 @@
+<?xml version="1.0" encoding="utf-8"?>
+<addon addon_id="FotoContest" title="FotoContest" version_string="0.7.1" version_id="26" url="https://github.com/fotocontest" install_callback_class="FotoContest_Install_FotoContest" install_callback_method="install" uninstall_callback_class="FotoContest_Install_FotoContest" uninstall_callback_method="uninstall">
+  <admin_navigation>
+    <navigation navigation_id="lfc" parent_navigation_id="applications" display_order="1980" link="" admin_permission_id="option" debug_only="0" hide_no_children="1"/>
+    <navigation navigation_id="lfcEntry" parent_navigation_id="lfc" display_order="2000" link="options/list/lfcEntry" admin_permission_id="option" debug_only="0" hide_no_children="0"/>
+    <navigation navigation_id="lfcOptions" parent_navigation_id="lfc" display_order="1980" link="options/list/lfc" admin_permission_id="option" debug_only="0" hide_no_children="0"/>
+    <navigation navigation_id="lfcThread" parent_navigation_id="lfc" display_order="1990" link="options/list/lfcThread" admin_permission_id="option" debug_only="0" hide_no_children="0"/>
+  </admin_navigation>
+  <admin_permissions/>
+  <admin_style_properties/>
+  <admin_templates>
+    <template title="lfc_option_template_username"><![CDATA[<xen:controlunit label="{$preparedOption.title}">
+  <xen:html>
+    <xen:textbox name="options[{$preparedOption.option_id}]"
+      value="{$preparedOption.option_value}"
+      inputclass="AutoComplete AcSingle"
+      placeholder="{xen:phrase user_name}..." size="40" />
+    <input type="hidden" name="{$listedFieldName}" value="{$preparedOption.option_id}" />
+    {xen:raw $editLink}
+  </xen:html>
+  <xen:explain>{xen:raw $preparedOption.explain}</xen:explain>
+</xen:controlunit>
+]]></template>
+    <template title="lfc_tools_rebuild"><![CDATA[<xen:form action="{xen:adminlink 'tools/trigger-deferred'}">
+
+  <h2 class="subHeading">
+    {xen:phrase lfc_rebuild_photo_contest_entry_thumbnails}
+  </h2>
+
+  <xen:spinboxunit name="options[batch]"
+    value="100"
+    step="25"
+    min="1"
+    label="{xen:phrase items_to_process_per_page}:" />
+
+  <xen:submitunit save="{xen:phrase rebuild_now}" />
+  <input type="hidden" name="cache" value="FotoContest_Deferred_ContestEntryThumb" />
+</xen:form>
+]]></template>
+    <template title="lfc_user_criteria_content"><![CDATA[<li>
+  <label>
+    <input type="checkbox"
+      name="user_criteria[lfc_contests_won][rule]"
+      value="lfc_contests_won"
+      class="Disabler"
+      id="ucrit_lfc_contests_won"
+      {xen:checked $userCriteria.lfc_contests_won} />
+    {xen:phrase lfc_user_has_won_at_least_x_contests}:
+  </label>
+  <div class="criteriaQualifier" id="ucrit_lfc_contests_won_Disabler">
+    <xen:spinbox name="user_criteria[lfc_contests_won][data][contests_won]"
+      value="{$userCriteria.lfc_contests_won.contests_won}"
+      size="5"
+      min="0"
+      step="1" />
+  </div>
+</li>
+
+<li>
+  <label>
+    <input type="checkbox"
+      name="user_criteria[lfc_contest_entries][rule]"
+      value="lfc_contest_entries"
+      class="Disabler"
+      id="ucrit_lfc_contest_entries"
+      {xen:checked $userCriteria.lfc_contest_entries} />
+    {xen:phrase lfc_user_has_at_least_x_contest_entries}:
+  </label>
+  <div class="criteriaQualifier" id="ucrit_lfc_contest_entries_Disabler">
+    <xen:spinbox name="user_criteria[lfc_contest_entries][data][contest_entries]"
+      value="{$userCriteria.lfc_contest_entries.contest_entries}"
+      size="5"
+      min="0"
+      step="1" />
+  </div>
+</li>
+]]></template>
+    <template title="lfc_widget_latest_contests_options"><![CDATA[<xen:textboxunit label="{xen:phrase wf_limit}:" name="{$namePrefix}limit" value="{$options.limit}">
+  <xen:explain>{xen:phrase wf_limit_explain, "items={xen:phrase lfc_widget_contests}"}</xen:explain>
+</xen:textboxunit>
+
+<xen:radiounit label="{xen:phrase lfc_widget_order_field}:" name="{$namePrefix}orderField" value="{xen:if '{$options.orderField}', $options.orderField, 'avatarOnlyBigger'}">
+  <xen:option value="created_at">{xen:phrase lfc_widget_created_at}</xen:option>
+  <xen:option value="posting_opens_on">{xen:phrase lfc_widget_posting_opens_on}</xen:option>
+  <xen:option value="posting_closes_on">{xen:phrase lfc_widget_posting_closes_on}</xen:option>
+  <xen:option value="voting_opens_on">{xen:phrase lfc_widget_voting_opens_on}</xen:option>
+  <xen:option value="voting_closes_on">{xen:phrase lfc_widget_voting_closes_on}</xen:option>
+</xen:radiounit>
+
+<xen:radiounit label="{xen:phrase lfc_widget_order_direction}:" name="{$namePrefix}orderDirection" value="{xen:if '{$options.orderDirection}', $options.orderDirection, 'avatarOnlyBigger'}">
+  <xen:option value="DESC">{xen:phrase lfc_widget_desc}</xen:option>
+  <xen:option value="ASC">{xen:phrase lfc_widget_asc}</xen:option>
+</xen:radiounit>
+
+<xen:checkboxunit label="">
+  <xen:option name="{$namePrefix}featured" value="1" selected="{$options.featured}">{xen:phrase lfc_widget_latest_entries_only_featured}</xen:option>
+</xen:checkboxunit>
+]]></template>
+    <template title="lfc_widget_latest_entries_options"><![CDATA[<xen:textboxunit label="{xen:phrase wf_limit}:" name="{$namePrefix}limit" value="{$options.limit}">
+  <xen:explain>{xen:phrase lfc_widget_latest_entries_explain_limit}</xen:explain>
+</xen:textboxunit>
+
+<xen:textboxunit label="{xen:phrase lfc_widget_latest_entries_thumb_size}:" name="{$namePrefix}thumbSize" value="{$options.thumbSize}">
+  <xen:explain>{xen:phrase lfc_widget_latest_entries_explain_thumb_size}</xen:explain>
+</xen:textboxunit>
+
+<xen:checkboxunit label="">
+  <xen:option name="{$namePrefix}includeClosed" value="1" selected="{$options.includeClosed}">{xen:phrase lfc_widget_latest_entries_include_closed}</xen:option>
+</xen:checkboxunit>
+
+<xen:checkboxunit label="">
+  <xen:option name="{$namePrefix}onlyWinningEntries" value="1" selected="{$options.onlyWinningEntries}">{xen:phrase lfc_widget_latest_entries_only_winning_entries}</xen:option>
+</xen:checkboxunit>
+]]></template>
+  </admin_templates>
+  <admin_template_modifications/>
+  <code_events/>
+  <code_event_listeners>
+    <listener event_id="criteria_user" execute_order="10" callback_class="FotoContest_Listener_CriteriaUser" callback_method="init" active="1" hint="" description=""/>
+    <listener event_id="init_dependencies" execute_order="557220" callback_class="FotoContest_Listener_InitDependencies" callback_method="init" active="1" hint="" description=""/>
+    <listener event_id="load_class_controller" execute_order="557220" callback_class="FotoContest_Listener_LoadClassController" callback_method="init" active="1" hint="" description=""/>
+    <listener event_id="load_class_datawriter" execute_order="557220" callback_class="FotoContest_Listener_LoadClassDataWriter" callback_method="init" active="1" hint="" description=""/>
+    <listener event_id="load_class_model" execute_order="557220" callback_class="FotoContest_Listener_LoadClassModel" callback_method="init" active="1" hint="" description=""/>
+    <listener event_id="navigation_tabs" execute_order="557220" callback_class="FotoContest_Listener_Tabs" callback_method="init" active="1" hint="" description=""/>
+    <listener event_id="template_hook" execute_order="557220" callback_class="FotoContest_Listener_TemplateHook" callback_method="init" active="1" hint="" description=""/>
+    <listener event_id="template_post_render" execute_order="10" callback_class="FotoContest_Listener_TemplateHook" callback_method="templatePostRender" active="1" hint="" description=""/>
+    <listener event_id="widget_framework_ready" execute_order="557220" callback_class="FotoContest_Listener_WidgetFrameworkReady" callback_method="init" active="1" hint="" description=""/>
+  </code_event_listeners>
+  <cron>
+    <entry entry_id="lfcCounters" cron_class="FotoContest_Cron_Counters" cron_method="init" active="1"><![CDATA[{"day_type":"dom","dom":["-1"],"hours":["-1"],"minutes":["15"]}]]></entry>
+    <entry entry_id="lfcWinner" cron_class="FotoContest_Cron_Winner" cron_method="init" active="1"><![CDATA[{"day_type":"dom","dom":["-1"],"hours":["-1"],"minutes":["30"]}]]></entry>
+  </cron>
+  <email_templates/>
+  <email_template_modifications/>
+  <optiongroups>
+    <group group_id="lfc" display_order="1980" debug_only="0"/>
+    <group group_id="lfcEntry" display_order="1982" debug_only="0"/>
+    <group group_id="lfcThread" display_order="1981" debug_only="0"/>
+    <option option_id="lfcAttachmentExtensions" edit_format="textbox" data_type="string" can_backup="1">
+      <default_value>png
+jpg
+jpeg
+jpe
+gif</default_value>
+      <edit_format_params>rows=6</edit_format_params>
+      <sub_options></sub_options>
+      <relation group_id="lfc" display_order="2"/>
+    </option>
+    <option option_id="lfcAttachmentMaxDimensions" edit_format="template" data_type="array" can_backup="1">
+      <default_value></default_value>
+      <edit_format_params>option_template_attachmentMaxDimensions</edit_format_params>
+      <sub_options>width
+height</sub_options>
+      <relation group_id="lfc" display_order="3"/>
+    </option>
+    <option option_id="lfcAttachmentMaxFileSize" edit_format="spinbox" data_type="unsigned_integer" can_backup="1">
+      <default_value>1024</default_value>
+      <edit_format_params>min=0
+step=128</edit_format_params>
+      <sub_options></sub_options>
+      <relation group_id="lfc" display_order="1"/>
+    </option>
+    <option option_id="lfcAttachmentThumbnailDimensions" edit_format="spinbox" data_type="positive_integer" can_backup="1">
+      <default_value>110</default_value>
+      <edit_format_params>min=25
+step=5</edit_format_params>
+      <sub_options></sub_options>
+      <relation group_id="lfc" display_order="4"/>
+    </option>
+    <option option_id="lfcEntryForumId" edit_format="callback" data_type="string" can_backup="1">
+      <default_value></default_value>
+      <edit_format_params>XenForo_Option_ForumChooser::renderOption</edit_format_params>
+      <sub_options></sub_options>
+      <relation group_id="lfcEntry" display_order="2"/>
+    </option>
+    <option option_id="lfcEntryThreadTitle" edit_format="textbox" data_type="string" can_backup="1">
+      <default_value>{title}</default_value>
+      <edit_format_params></edit_format_params>
+      <sub_options></sub_options>
+      <relation group_id="lfcEntry" display_order="1"/>
+    </option>
+    <option option_id="lfcNavigationTabPosition" edit_format="radio" data_type="string" can_backup="1">
+      <default_value>middle</default_value>
+      <edit_format_params>hidden=Hidden
+home=Home
+middle=Middle
+end=End</edit_format_params>
+      <sub_options></sub_options>
+      <relation group_id="lfc" display_order="500"/>
+    </option>
+    <option option_id="lfcThreadForumId" edit_format="callback" data_type="unsigned_integer" can_backup="1">
+      <default_value>0</default_value>
+      <edit_format_params>XenForo_Option_ForumChooser::renderOption</edit_format_params>
+      <sub_options></sub_options>
+      <relation group_id="lfcThread" display_order="10"/>
+    </option>
+    <option option_id="lfcThreadMessage" edit_format="textbox" data_type="string" can_backup="1">
+      <default_value>[b]{title}[/b]
+
+{winnersHtml}
+
+[url="{contestUrl}"]View contest entries...[/url]</default_value>
+      <edit_format_params>rows=3</edit_format_params>
+      <sub_options></sub_options>
+      <relation group_id="lfcThread" display_order="40"/>
+    </option>
+    <option option_id="lfcThreadOptions" edit_format="checkbox" data_type="array" can_backup="1">
+      <default_value>a:3:{s:5:"state";s:1:"1";s:4:"open";s:1:"1";s:6:"sticky";s:1:"0";}</default_value>
+      <edit_format_params>state = {xen:phrase lfc_post_immediately}
+open = {xen:phrase lfc_open}
+sticky = {xen:phrase lfc_sticky}</edit_format_params>
+      <sub_options>state
+open
+sticky</sub_options>
+      <relation group_id="lfcThread" display_order="50"/>
+    </option>
+    <option option_id="lfcThreadTitle" edit_format="textbox" data_type="string" can_backup="1">
+      <default_value>Contest Winner {title}</default_value>
+      <edit_format_params></edit_format_params>
+      <sub_options></sub_options>
+      <relation group_id="lfcThread" display_order="30"/>
+    </option>
+    <option option_id="lfcThreadUsername" edit_format="template" data_type="string" can_backup="1">
+      <default_value></default_value>
+      <edit_format_params>lfc_option_template_username</edit_format_params>
+      <sub_options></sub_options>
+      <relation group_id="lfcThread" display_order="20"/>
+    </option>
+    <option option_id="lfcThumbnailEntryMedium" edit_format="textbox" data_type="string" can_backup="1">
+      <default_value>600</default_value>
+      <edit_format_params></edit_format_params>
+      <sub_options></sub_options>
+      <relation group_id="lfc" display_order="410"/>
+    </option>
+    <option option_id="lfcThumbnailEntrySmall" edit_format="textbox" data_type="string" can_backup="1">
+      <default_value>110C</default_value>
+      <edit_format_params></edit_format_params>
+      <sub_options></sub_options>
+      <relation group_id="lfc" display_order="400"/>
+    </option>
+  </optiongroups>
+  <permissions>
+    <permission_groups>
+      <permission_group permission_group_id="lfc"/>
+    </permission_groups>
+    <permissions>
+      <permission permission_group_id="lfc" permission_id="approveUnapprove" permission_type="flag" default_value="unset" interface_group_id="lfcModeratorPermissions" display_order="1"/>
+      <permission permission_group_id="lfc" permission_id="deleteAny" permission_type="flag" default_value="unset" interface_group_id="lfcModeratorPermissions" display_order="200"/>
+      <permission permission_group_id="lfc" permission_id="deleteAnyEntry" permission_type="flag" default_value="unset" interface_group_id="lfcModeratorPermissions" display_order="210"/>
+      <permission permission_group_id="lfc" permission_id="deleteOwn" permission_type="flag" default_value="unset" interface_group_id="lfcPermissions" display_order="300"/>
+      <permission permission_group_id="lfc" permission_id="deleteOwnEntry" permission_type="flag" default_value="unset" interface_group_id="lfcPermissions" display_order="310"/>
+      <permission permission_group_id="lfc" permission_id="editAny" permission_type="flag" default_value="unset" interface_group_id="lfcModeratorPermissions" display_order="100"/>
+      <permission permission_group_id="lfc" permission_id="editAnyEntry" permission_type="flag" default_value="unset" interface_group_id="lfcModeratorPermissions" display_order="110"/>
+      <permission permission_group_id="lfc" permission_id="editOwn" permission_type="flag" default_value="unset" interface_group_id="lfcPermissions" display_order="200"/>
+      <permission permission_group_id="lfc" permission_id="editOwnEntry" permission_type="flag" default_value="unset" interface_group_id="lfcPermissions" display_order="210"/>
+      <permission permission_group_id="lfc" permission_id="hardDeleteAny" permission_type="flag" default_value="unset" interface_group_id="lfcModeratorPermissions" display_order="300"/>
+      <permission permission_group_id="lfc" permission_id="hardDeleteAnyEntry" permission_type="flag" default_value="unset" interface_group_id="lfcModeratorPermissions" display_order="310"/>
+      <permission permission_group_id="lfc" permission_id="like" permission_type="flag" default_value="unset" interface_group_id="lfcPermissions" display_order="400"/>
+      <permission permission_group_id="lfc" permission_id="postContest" permission_type="flag" default_value="unset" interface_group_id="lfcPermissions" display_order="100"/>
+      <permission permission_group_id="lfc" permission_id="postEntry" permission_type="flag" default_value="unset" interface_group_id="lfcPermissions" display_order="120"/>
+      <permission permission_group_id="lfc" permission_id="unDelete" permission_type="flag" default_value="unset" interface_group_id="lfcModeratorPermissions" display_order="500"/>
+      <permission permission_group_id="lfc" permission_id="view" permission_type="flag" default_value="unset" interface_group_id="lfcPermissions" display_order="1"/>
+      <permission permission_group_id="lfc" permission_id="viewDeleted" permission_type="flag" default_value="unset" interface_group_id="lfcModeratorPermissions" display_order="400"/>
+      <permission permission_group_id="lfc" permission_id="viewLikeCount" permission_type="flag" default_value="unset" interface_group_id="lfcPermissions" display_order="4010"/>
+    </permissions>
+    <interface_groups>
+      <interface_group interface_group_id="lfcModeratorPermissions" display_order="557220"/>
+      <interface_group interface_group_id="lfcPermissions" display_order="557210"/>
+    </interface_groups>
+  </permissions>
+  <phrases>
+    <phrase title="admin_navigation_lfc" version_id="1" version_string="1"><![CDATA[FotoContest]]></phrase>
+    <phrase title="admin_navigation_lfcEntry" version_id="11" version_string="0.4.0"><![CDATA[New Entry Thread]]></phrase>
+    <phrase title="admin_navigation_lfcOptions" version_id="1" version_string="1"><![CDATA[Options]]></phrase>
+    <phrase title="admin_navigation_lfcThread" version_id="11" version_string="0.4.0"><![CDATA[Winners Thread]]></phrase>
+    <phrase title="cron_entry_lfcCounters" version_id="14" version_string="0.5.0"><![CDATA[FotoContest: Update Counters]]></phrase>
+    <phrase title="cron_entry_lfcWinner" version_id="14" version_string="0.5.0"><![CDATA[FotoContest: Announce Winners]]></phrase>
+    <phrase title="lfc" version_id="1" version_string="1"><![CDATA[Photo Contest]]></phrase>
+    <phrase title="lfc_approve_contest_entries" version_id="1" version_string="0.1.3"><![CDATA[Approve Contest Entries]]></phrase>
+    <phrase title="lfc_closed" version_id="1" version_string="0.1.1"><![CDATA[Closed]]></phrase>
+    <phrase title="lfc_contests" version_id="1" version_string="1"><![CDATA[Photo Contests]]></phrase>
+    <phrase title="lfc_contests_closed" version_id="8" version_string="0.2.4"><![CDATA[Closed]]></phrase>
+    <phrase title="lfc_contests_open" version_id="8" version_string="0.2.4"><![CDATA[Open]]></phrase>
+    <phrase title="lfc_contest_closed" version_id="1" version_string="1"><![CDATA[Sorry but this contest is closed.]]></phrase>
+    <phrase title="lfc_contest_currently_closed" version_id="1" version_string="0.1.3"><![CDATA[Sorry but this contest is currently closed to voting.]]></phrase>
+    <phrase title="lfc_contest_entries" version_id="1" version_string="1"><![CDATA[Contest Entries]]></phrase>
+    <phrase title="lfc_contest_entries_awaiting_approval" version_id="1" version_string="0.1.1"><![CDATA[Photo Contest Entries]]></phrase>
+    <phrase title="lfc_contest_entry" version_id="14" version_string="0.5.0"><![CDATA[Contest Entry]]></phrase>
+    <phrase title="lfc_contest_entry_by" version_id="14" version_string="0.5.0"><![CDATA[Contest entry by]]></phrase>
+    <phrase title="lfc_contest_entry_description" version_id="5" version_string="0.2.1"><![CDATA[Entry Description]]></phrase>
+    <phrase title="lfc_contest_entry_discussion" version_id="11" version_string="0.4.0"><![CDATA[Discussion]]></phrase>
+    <phrase title="lfc_contest_entry_edit_sorry_contest_is_closed" version_id="4" version_string="0.2.0"><![CDATA[Sorry, you can't edit your entry once the contest has closed.]]></phrase>
+    <phrase title="lfc_contest_entry_edit_sorry_voting_is_open" version_id="9" version_string="0.2.5"><![CDATA[Sorry, you can't edit your entry once voting has started.]]></phrase>
+    <phrase title="lfc_contest_entry_for_x" version_id="1" version_string="1"><![CDATA[Photo Contest Entry: {title}]]></phrase>
+    <phrase title="lfc_contest_entry_images" version_id="4" version_string="0.2.0"><![CDATA[Contest Entry Images]]></phrase>
+    <phrase title="lfc_contest_entry_in_x_posted_by_y_date_z" version_id="1" version_string="1"><![CDATA[Photo Contest Entry in '{contest}' posted by {name}, {date}.]]></phrase>
+    <phrase title="lfc_contest_entry_in_y_date_z" version_id="1" version_string="0.1.2"><![CDATA[Photo Contest Entry in '{contest}', posted {date}.]]></phrase>
+    <phrase title="lfc_contest_entry_label_description" version_id="4" version_string="0.2.0"><![CDATA[Description]]></phrase>
+    <phrase title="lfc_contest_entry_label_title" version_id="1" version_string="1"><![CDATA[Title]]></phrase>
+    <phrase title="lfc_contest_entry_label_upload_file" version_id="1" version_string="1"><![CDATA[Upload your contest entry]]></phrase>
+    <phrase title="lfc_contest_entry_like" version_id="2" version_string="0.1.4"><![CDATA[<i class="fa fa-thumbs-up"></i>]]></phrase>
+    <phrase title="lfc_contest_entry_limit_reached" version_id="1" version_string="0.1.1"><![CDATA[You've reached the maximum number of enties allowed: {limit}]]></phrase>
+    <phrase title="lfc_contest_entry_no_description" version_id="6" version_string="0.2.2"><![CDATA[No description]]></phrase>
+    <phrase title="lfc_contest_entry_order_latest" version_id="8" version_string="0.2.4"><![CDATA[Latest entries first]]></phrase>
+    <phrase title="lfc_contest_entry_order_least_likes" version_id="8" version_string="0.2.4"><![CDATA[Entries with least likes first]]></phrase>
+    <phrase title="lfc_contest_entry_order_most_likes" version_id="8" version_string="0.2.4"><![CDATA[Entries with most likes first]]></phrase>
+    <phrase title="lfc_contest_entry_order_oldest" version_id="8" version_string="0.2.4"><![CDATA[Oldest entries first]]></phrase>
+    <phrase title="lfc_contest_entry_placeholder_title" version_id="1" version_string="1"><![CDATA[Contest Entry Title]]></phrase>
+    <phrase title="lfc_contest_entry_position" version_id="7" version_string="0.2.3"><![CDATA[Place]]></phrase>
+    <phrase title="lfc_contest_entry_status" version_id="1" version_string="1"><![CDATA[Contest Entry Status]]></phrase>
+    <phrase title="lfc_contest_entry_thread" version_id="14" version_string="0.5.0"><![CDATA[{username} submitted a new contest entry:
+
+[url={contestEntryLink}]{title}[/url]
+
+[quote]{snippet}[/quote]
+
+[url={contestEntryLink}]View contest entry...[/url]]]></phrase>
+    <phrase title="lfc_contest_entry_thread_someone" version_id="14" version_string="0.5.0"><![CDATA[Someone submitted a new contest entry:
+
+[url={contestEntryLink}]{title}[/url]
+
+[quote]{snippet}[/quote]
+
+[url={contestEntryLink}]View contest entry...[/url]]]></phrase>
+    <phrase title="lfc_contest_entry_unlike" version_id="2" version_string="0.1.4"><![CDATA[<i class="fa fa-thumbs-down"></i>]]></phrase>
+    <phrase title="lfc_contest_explain_usergroup_post" version_id="14" version_string="0.5.0"><![CDATA[If a user does not have permission to add post/edit entries, this setting will not apply.]]></phrase>
+    <phrase title="lfc_contest_explain_usergroup_vote" version_id="16" version_string="0.6.0"><![CDATA[If a user does not have permission to like entries, this setting will not apply.]]></phrase>
+    <phrase title="lfc_contest_label_allow_tied_winners" version_id="10" version_string="0.2.6"><![CDATA[Allow tied winners]]></phrase>
+    <phrase title="lfc_contest_label_contest_closed" version_id="8" version_string="0.2.4"><![CDATA[Contest Closed (automatically "checked" after vote closing date)]]></phrase>
+    <phrase title="lfc_contest_label_description" version_id="1" version_string="1"><![CDATA[Description]]></phrase>
+    <phrase title="lfc_contest_label_entry_order" version_id="8" version_string="0.2.4"><![CDATA[Display Order of Entries]]></phrase>
+    <phrase title="lfc_contest_label_hide_authors" version_id="1" version_string="0.1.2"><![CDATA[Hide contest entry authors from public view]]></phrase>
+    <phrase title="lfc_contest_label_hide_entries" version_id="14" version_string="0.5.0"><![CDATA[Hide entries from public view until voting opens]]></phrase>
+    <phrase title="lfc_contest_label_is_featured" version_id="22" version_string="0.6.7"><![CDATA[Featured (Use [bd] Widget Framework for now :))]]></phrase>
+    <phrase title="lfc_contest_label_max_entry_count" version_id="1" version_string="0.1.1"><![CDATA[Maximum Entries Per User]]></phrase>
+    <phrase title="lfc_contest_label_max_images_per_entry" version_id="4" version_string="0.2.0"><![CDATA[Maximum Images Per Entry]]></phrase>
+    <phrase title="lfc_contest_label_max_votes_count" version_id="6" version_string="0.2.2"><![CDATA[Maximum Votes Per User]]></phrase>
+    <phrase title="lfc_contest_label_max_winners_count" version_id="1" version_string="0.1.2"><![CDATA[Number of winners for this contest]]></phrase>
+    <phrase title="lfc_contest_label_moderate_entries" version_id="1" version_string="0.1.1"><![CDATA[Moderate all contest entries posted in this contest]]></phrase>
+    <phrase title="lfc_contest_label_posting_closes_on" version_id="1" version_string="0.1.1"><![CDATA[Entries Closing Date]]></phrase>
+    <phrase title="lfc_contest_label_posting_opens_on" version_id="1" version_string="0.1.1"><![CDATA[Entries Opening Date]]></phrase>
+    <phrase title="lfc_contest_label_title" version_id="1" version_string="1"><![CDATA[Title]]></phrase>
+    <phrase title="lfc_contest_label_upload_file" version_id="1" version_string="1"><![CDATA[Preview Image]]></phrase>
+    <phrase title="lfc_contest_label_usergroup_post" version_id="16" version_string="0.6.0"><![CDATA[Allowed to take part]]></phrase>
+    <phrase title="lfc_contest_label_usergroup_vote" version_id="16" version_string="0.6.0"><![CDATA[Allowed to vote]]></phrase>
+    <phrase title="lfc_contest_label_voting_closes_on" version_id="1" version_string="0.1.1"><![CDATA[Voting Closing Date]]></phrase>
+    <phrase title="lfc_contest_label_voting_opens_on" version_id="1" version_string="0.1.1"><![CDATA[Voting Opening Date]]></phrase>
+    <phrase title="lfc_contest_max_votes_reached" version_id="1" version_string="0.1.1"><![CDATA[You've reached the maximum number of votes allowed: {limit}]]></phrase>
+    <phrase title="lfc_contest_options" version_id="1" version_string="0.1.1"><![CDATA[Options]]></phrase>
+    <phrase title="lfc_contest_other" version_id="22" version_string="0.6.7"><![CDATA[Other]]></phrase>
+    <phrase title="lfc_contest_permissions" version_id="12" version_string="0.4.0"><![CDATA[Permissions]]></phrase>
+    <phrase title="lfc_contest_placeholder_title" version_id="1" version_string="1"><![CDATA[Contest Title]]></phrase>
+    <phrase title="lfc_contest_status" version_id="1" version_string="1"><![CDATA[Contest Status]]></phrase>
+    <phrase title="lfc_contest_status_hide_entries" version_id="14" version_string="0.5.0"><![CDATA[Entries will become visible when the contest opens for voting on {date}]]></phrase>
+    <phrase title="lfc_contest_timeline" version_id="1" version_string="0.1.1"><![CDATA[Timeline]]></phrase>
+    <phrase title="lfc_contest_tools" version_id="1" version_string="1"><![CDATA[Photo Contest Tools]]></phrase>
+    <phrase title="lfc_contest_view_information" version_id="6" version_string="0.2.2"><![CDATA[Contest Information]]></phrase>
+    <phrase title="lfc_contest_view_posting_closes_on" version_id="1" version_string="0.1.1"><![CDATA[Entry Deadline]]></phrase>
+    <phrase title="lfc_contest_view_posting_opens_on" version_id="1" version_string="0.1.1"><![CDATA[Open To Entries]]></phrase>
+    <phrase title="lfc_contest_view_voting_closes_on" version_id="1" version_string="0.1.1"><![CDATA[Votes Close]]></phrase>
+    <phrase title="lfc_contest_view_voting_opens_on" version_id="1" version_string="0.1.1"><![CDATA[Votes Open]]></phrase>
+    <phrase title="lfc_contest_winner" version_id="7" version_string="0.2.3"><![CDATA[Contest Winner]]></phrase>
+    <phrase title="lfc_create_contest" version_id="1" version_string="1"><![CDATA[Create Contest]]></phrase>
+    <phrase title="lfc_create_contest_entry" version_id="1" version_string="1"><![CDATA[Create Contest Entry]]></phrase>
+    <phrase title="lfc_delete_contest" version_id="1" version_string="1"><![CDATA[Delete Contest]]></phrase>
+    <phrase title="lfc_delete_contest_entries" version_id="1" version_string="1"><![CDATA[Delete Contest Entries]]></phrase>
+    <phrase title="lfc_delete_contest_entry" version_id="1" version_string="1"><![CDATA[Delete Contest Entry]]></phrase>
+    <phrase title="lfc_deselect_contest_entries" version_id="1" version_string="1"><![CDATA[Deselect Contest Entries]]></phrase>
+    <phrase title="lfc_edit_contest" version_id="1" version_string="1"><![CDATA[Edit Contest]]></phrase>
+    <phrase title="lfc_edit_contest_entry" version_id="1" version_string="1"><![CDATA[Edit Contest Entry]]></phrase>
+    <phrase title="lfc_entry" version_id="1" version_string="1"><![CDATA[Photo Contest Entry]]></phrase>
+    <phrase title="lfc_error_contest_closing_date_after_opening_date" version_id="6" version_string="0.2.2"><![CDATA[Closing date should be after contest opening date]]></phrase>
+    <phrase title="lfc_error_voting_close_date_after_voting_open_date" version_id="6" version_string="0.2.2"><![CDATA[Voting close date should be after vote opening date]]></phrase>
+    <phrase title="lfc_flash_not_allowed_to_vote" version_id="17" version_string="0.6.1"><![CDATA[Sorry, you are not allowed to participate in this contest.]]></phrase>
+    <phrase title="lfc_inline_moderation_delete_contest_entries" version_id="1" version_string="1"><![CDATA[Inline Moderation - Delete Contest Entries]]></phrase>
+    <phrase title="lfc_in_contest" version_id="14" version_string="0.5.0"><![CDATA[in contest]]></phrase>
+    <phrase title="lfc_likes" version_id="7" version_string="0.2.3"><![CDATA[Likes]]></phrase>
+    <phrase title="lfc_likes_your_contest_entry" version_id="2" version_string="0.1.4"><![CDATA[Likes your contest entry]]></phrase>
+    <phrase title="lfc_like_contest_entry" version_id="1" version_string="1"><![CDATA[Like Contest Entry]]></phrase>
+    <phrase title="lfc_no" version_id="1" version_string="0.1.1"><![CDATA[No]]></phrase>
+    <phrase title="lfc_open" version_id="10" version_string="0.2.6"><![CDATA[Open]]></phrase>
+    <phrase title="lfc_photo_contest_entry_thumbnails" version_id="12" version_string="0.4.0"><![CDATA[Photo Contest Entry Thumnails]]></phrase>
+    <phrase title="lfc_please_enter_reason_for_reporting_this_contest_entry" version_id="1" version_string="1"><![CDATA[Please enter a reason for reporting this entry]]></phrase>
+    <phrase title="lfc_please_upload_your_contest_entry" version_id="1" version_string="1"><![CDATA[Please upload your entry]]></phrase>
+    <phrase title="lfc_post_immediately" version_id="10" version_string="0.2.6"><![CDATA[Post immediately]]></phrase>
+    <phrase title="lfc_post_new_contest" version_id="1" version_string="1"><![CDATA[Post New Contest]]></phrase>
+    <phrase title="lfc_post_new_contest_entry" version_id="1" version_string="1"><![CDATA[Post New Contest Entry]]></phrase>
+    <phrase title="lfc_rebuild_photo_contest_entry_thumbnails" version_id="12" version_string="0.4.0"><![CDATA[Rebuild Photo Contest Entry Thumbnails]]></phrase>
+    <phrase title="lfc_report_contest_entry" version_id="1" version_string="1"><![CDATA[Report Contest Entry]]></phrase>
+    <phrase title="lfc_requested_contest_entry_not_found" version_id="1" version_string="1"><![CDATA[The requested contest entry could not be found.]]></phrase>
+    <phrase title="lfc_requested_contest_not_found" version_id="1" version_string="1"><![CDATA[The requested contest could not be found.]]></phrase>
+    <phrase title="lfc_search" version_id="14" version_string="0.5.0"><![CDATA[Search Contest Entries]]></phrase>
+    <phrase title="lfc_search_only_descriptions" version_id="14" version_string="0.5.0"><![CDATA[Search only contest entry description]]></phrase>
+    <phrase title="lfc_selected_contest_entries" version_id="1" version_string="1"><![CDATA[Selected Contest Entries]]></phrase>
+    <phrase title="lfc_select_contest_entry" version_id="1" version_string="1"><![CDATA[Select Contest Entry]]></phrase>
+    <phrase title="lfc_someone_likes_one_of_your_contest_entries" version_id="2" version_string="0.1.4"><![CDATA[Someone likes one of your contest entries]]></phrase>
+    <phrase title="lfc_sticky" version_id="10" version_string="0.2.6"><![CDATA[Sticky]]></phrase>
+    <phrase title="lfc_thank_you_for_reporting_this_contest_entry" version_id="1" version_string="1"><![CDATA[Thank you for reporting this contest entry]]></phrase>
+    <phrase title="lfc_there_are_no_contests_to_display" version_id="1" version_string="1"><![CDATA[There are no contests to display]]></phrase>
+    <phrase title="lfc_there_are_no_contest_entries_to_display" version_id="18" version_string="0.6.2"><![CDATA[No entries yet, <a href="{link}">be the first</a>.]]></phrase>
+    <phrase title="lfc_thread_likes" version_id="2" version_string="0.1.4"><![CDATA[Likes]]></phrase>
+    <phrase title="lfc_thread_winners" version_id="2" version_string="0.1.4"><![CDATA[Winners]]></phrase>
+    <phrase title="lfc_unapprove_contest_entries" version_id="1" version_string="0.1.3"><![CDATA[Unapprove Contest Entries]]></phrase>
+    <phrase title="lfc_undelete_contest" version_id="1" version_string="1"><![CDATA[Undelete Contest]]></phrase>
+    <phrase title="lfc_undelete_contest_entries" version_id="1" version_string="1"><![CDATA[Undelete Contest Entries]]></phrase>
+    <phrase title="lfc_unlike_contest_entry" version_id="16" version_string="0.6.0"><![CDATA[Unlike Contest Entry]]></phrase>
+    <phrase title="lfc_user_has_at_least_x_contest_entries" version_id="14" version_string="0.5.0"><![CDATA[User has at least X contest entries]]></phrase>
+    <phrase title="lfc_user_has_won_at_least_x_contests" version_id="14" version_string="0.5.0"><![CDATA[User has won at least X contests]]></phrase>
+    <phrase title="lfc_widget_asc" version_id="6" version_string="0.2.2"><![CDATA[Ascending Order]]></phrase>
+    <phrase title="lfc_widget_contests" version_id="4" version_string="0.2.0"><![CDATA[Contests]]></phrase>
+    <phrase title="lfc_widget_created_at" version_id="6" version_string="0.2.2"><![CDATA[Contest Created On Date]]></phrase>
+    <phrase title="lfc_widget_desc" version_id="6" version_string="0.2.2"><![CDATA[Descending Order]]></phrase>
+    <phrase title="lfc_widget_latest_contests" version_id="17" version_string="0.6.1"><![CDATA[FotoContest - Contests]]></phrase>
+    <phrase title="lfc_widget_latest_entries" version_id="17" version_string="0.6.1"><![CDATA[FotoContest - Latest Entries]]></phrase>
+    <phrase title="lfc_widget_latest_entries_explain_limit" version_id="17" version_string="0.6.1"><![CDATA[Number of entries to show]]></phrase>
+    <phrase title="lfc_widget_latest_entries_explain_thumb_size" version_id="17" version_string="0.6.1"><![CDATA[Placing "C" at the end will crop the image to the exact size from the center of the image.]]></phrase>
+    <phrase title="lfc_widget_latest_entries_include_closed" version_id="19" version_string="0.6.4"><![CDATA[Include entries from closed / ended contests]]></phrase>
+    <phrase title="lfc_widget_latest_entries_only_featured" version_id="22" version_string="0.6.7"><![CDATA[Only show featured contests]]></phrase>
+    <phrase title="lfc_widget_latest_entries_only_winning_entries" version_id="25" version_string="0.7.0"><![CDATA[Only include winning entries]]></phrase>
+    <phrase title="lfc_widget_latest_entries_thumb_size" version_id="17" version_string="0.6.1"><![CDATA[Thumb Size]]></phrase>
+    <phrase title="lfc_widget_order_direction" version_id="6" version_string="0.2.2"><![CDATA[Order Direction]]></phrase>
+    <phrase title="lfc_widget_order_field" version_id="6" version_string="0.2.2"><![CDATA[Order Field]]></phrase>
+    <phrase title="lfc_widget_posting_closes_on" version_id="6" version_string="0.2.2"><![CDATA[Contest Closes On Date]]></phrase>
+    <phrase title="lfc_widget_posting_opens_on" version_id="6" version_string="0.2.2"><![CDATA[Contest Starts On Date]]></phrase>
+    <phrase title="lfc_widget_voting_closes_on" version_id="6" version_string="0.2.2"><![CDATA[Voting Closes On Date]]></phrase>
+    <phrase title="lfc_widget_voting_opens_on" version_id="6" version_string="0.2.2"><![CDATA[Voting Opens On Date]]></phrase>
+    <phrase title="lfc_widget_voting_opens_open" version_id="6" version_string="0.2.2"><![CDATA[Voting Starts On Date]]></phrase>
+    <phrase title="lfc_x_liked_your_contest_entry" version_id="1" version_string="1"><![CDATA[{name} liked your photo contest entry {title}]]></phrase>
+    <phrase title="lfc_x_liked_ys_contest_entry" version_id="1" version_string="1"><![CDATA[{name} liked <a {posterParams}>{poster}'s</a> photo contest entry {title}.]]></phrase>
+    <phrase title="lfc_yes" version_id="1" version_string="0.1.1"><![CDATA[Yes]]></phrase>
+    <phrase title="lfc_your_contest_entry_has_been_posted" version_id="1" version_string="1"><![CDATA[Your contest entry has been posted]]></phrase>
+    <phrase title="lfc_your_contest_entry_has_been_updated" version_id="1" version_string="1"><![CDATA[Your contest entry has been updated]]></phrase>
+    <phrase title="lfc_your_contest_has_been_posted" version_id="1" version_string="1"><![CDATA[Your contest has been posted]]></phrase>
+    <phrase title="lfc_your_contest_has_been_updated" version_id="1" version_string="1"><![CDATA[Your contest has been updated]]></phrase>
+    <phrase title="lfc_you_sure_you_want_to_delete_x_contest_entries" version_id="1" version_string="1"><![CDATA[Are you sure you want to delete {count} contest entries(s)?]]></phrase>
+    <phrase title="lfc_you_sure_you_want_to_like_this_contest_entry" version_id="1" version_string="1"><![CDATA[Are you sure you want to like this contest entry?]]></phrase>
+    <phrase title="lfc_you_sure_you_want_to_unlike_this_contest_entry" version_id="16" version_string="0.6.0"><![CDATA[Are you sure you want to unlike this contest entry?]]></phrase>
+    <phrase title="moderator_log_lfc_delete_hard" version_id="1" version_string="1"><![CDATA[Photo contest permanently deleted]]></phrase>
+    <phrase title="moderator_log_lfc_delete_soft" version_id="1" version_string="1"><![CDATA[Photo contest removed from public view (reason: {reason})]]></phrase>
+    <phrase title="moderator_log_lfc_entry_approve" version_id="1" version_string="0.1.2"><![CDATA[Photo contest entry approved]]></phrase>
+    <phrase title="moderator_log_lfc_entry_delete_hard" version_id="1" version_string="1"><![CDATA[Photo contest entry permanently deleted]]></phrase>
+    <phrase title="moderator_log_lfc_entry_delete_soft" version_id="1" version_string="1"><![CDATA[Photo contest entry removed from public view (reason: {reason})]]></phrase>
+    <phrase title="moderator_log_lfc_entry_undelete" version_id="1" version_string="1"><![CDATA[Photo contest entry undeleted]]></phrase>
+    <phrase title="moderator_log_lfc_undelete" version_id="1" version_string="1"><![CDATA[Contest undeleted]]></phrase>
+    <phrase title="option_group_lfc" version_id="1" version_string="1"><![CDATA[FotoContest]]></phrase>
+    <phrase title="option_group_lfcEntry" version_id="11" version_string="0.4.0"><![CDATA[FotoContest Entry Options]]></phrase>
+    <phrase title="option_group_lfcEntry_description" version_id="11" version_string="0.4.0"><![CDATA[]]></phrase>
+    <phrase title="option_group_lfcThread" version_id="1" version_string="1"><![CDATA[FotoContest Thread]]></phrase>
+    <phrase title="option_group_lfcThread_description" version_id="1" version_string="1"><![CDATA[]]></phrase>
+    <phrase title="option_group_lfc_description" version_id="1" version_string="1"><![CDATA[]]></phrase>
+    <phrase title="option_lfcAttachmentExtensions" version_id="1" version_string="1"><![CDATA[Allowed Attachment File Extensions]]></phrase>
+    <phrase title="option_lfcAttachmentExtensions_explain" version_id="1" version_string="1"><![CDATA[List the file extensions that are allowed to be uploaded. Use spaces or line break between extensions.]]></phrase>
+    <phrase title="option_lfcAttachmentMaxDimensions" version_id="1" version_string="1"><![CDATA[Maximum Attachment Image Dimensions]]></phrase>
+    <phrase title="option_lfcAttachmentMaxDimensions_explain" version_id="1" version_string="1"><![CDATA[The maximum allowed dimensions for attached images (width x height). Use 0 or blank to not restrict dimensions.]]></phrase>
+    <phrase title="option_lfcAttachmentMaxFileSize" version_id="10" version_string="0.2.6"><![CDATA[Maximum Attachment File Size (KB)]]></phrase>
+    <phrase title="option_lfcAttachmentMaxFileSize_explain" version_id="10" version_string="0.2.6"><![CDATA[Provide the maximum attachment file size in kilobytes (KB). Attachments over this size will be rejected.]]></phrase>
+    <phrase title="option_lfcAttachmentThumbnailDimensions" version_id="1" version_string="1"><![CDATA[Attachment Thumbnail Dimensions]]></phrase>
+    <phrase title="option_lfcAttachmentThumbnailDimensions_explain" version_id="1" version_string="1"><![CDATA[The maximum width and height of generated attachment thumbnails.]]></phrase>
+    <phrase title="option_lfcEntryForumId" version_id="11" version_string="0.4.0"><![CDATA[Automatically Create Thread in Forum]]></phrase>
+    <phrase title="option_lfcEntryForumId_explain" version_id="11" version_string="0.4.0"><![CDATA[If selected, whenever a contest entry is created, a thread will be posted in this forum.]]></phrase>
+    <phrase title="option_lfcEntryThreadTitle" version_id="11" version_string="0.4.0"><![CDATA[Thread Title Template]]></phrase>
+    <phrase title="option_lfcEntryThreadTitle_explain" version_id="11" version_string="0.4.0"><![CDATA[Normally, when threads are automatically created for contest entries, the thread title is just the contest entry title. This option lets you specify a format for the thread title. Use {title} where the contest entry title should appear.]]></phrase>
+    <phrase title="option_lfcNavigationTabPosition" version_id="19" version_string="0.6.4"><![CDATA[Navigation Tab Position]]></phrase>
+    <phrase title="option_lfcNavigationTabPosition_explain" version_id="19" version_string="0.6.4"><![CDATA[]]></phrase>
+    <phrase title="option_lfcThreadForumId" version_id="1" version_string="1"><![CDATA[Destination Forum]]></phrase>
+    <phrase title="option_lfcThreadForumId_explain" version_id="1" version_string="1"><![CDATA[Select the forum into which new discussions will be created for contest winners.]]></phrase>
+    <phrase title="option_lfcThreadMessage" version_id="1" version_string="1"><![CDATA[Message Template]]></phrase>
+    <phrase title="option_lfcThreadMessage_explain" version_id="2" version_string="0.1.4"><![CDATA[You can use the following tokens to form the message:
+{title} {description} {contestUrl} {contestEntryUrl} {winnersHtml}]]></phrase>
+    <phrase title="option_lfcThreadOptions" version_id="1" version_string="1"><![CDATA[Options]]></phrase>
+    <phrase title="option_lfcThreadOptions_explain" version_id="1" version_string="1"><![CDATA[]]></phrase>
+    <phrase title="option_lfcThreadTitle" version_id="11" version_string="0.4.0"><![CDATA[Thread Title Template]]></phrase>
+    <phrase title="option_lfcThreadTitle_explain" version_id="1" version_string="1"><![CDATA[You can use the following token to form the title: {title}]]></phrase>
+    <phrase title="option_lfcThreadUsername" version_id="1" version_string="1"><![CDATA[Posting User]]></phrase>
+    <phrase title="option_lfcThreadUsername_explain" version_id="10" version_string="0.2.6"><![CDATA[If left blank it won't be able to create threads]]></phrase>
+    <phrase title="option_lfcThumbnailEntryMedium" version_id="14" version_string="0.5.0"><![CDATA[Entry Thumb Size - Medium Varient]]></phrase>
+    <phrase title="option_lfcThumbnailEntryMedium_explain" version_id="14" version_string="0.5.0"><![CDATA[Placing "<strong>C</strong>" at the end will crop the image to the exact size from the center of the image.]]></phrase>
+    <phrase title="option_lfcThumbnailEntrySmall" version_id="14" version_string="0.5.0"><![CDATA[Entry Thumb Size - Small Varient]]></phrase>
+    <phrase title="option_lfcThumbnailEntrySmall_explain" version_id="14" version_string="0.5.0"><![CDATA[Placing "<strong>C</strong>" at the end will crop the image to the exact size from the center of the image.]]></phrase>
+    <phrase title="permission_group_lfc" version_id="1" version_string="1"><![CDATA[FotoContest Permissions]]></phrase>
+    <phrase title="permission_interface_lfcModeratorPermissions" version_id="1" version_string="1"><![CDATA[FotoContest Moderator Permissions]]></phrase>
+    <phrase title="permission_interface_lfcPermissions" version_id="1" version_string="1"><![CDATA[FotoContest Permissions]]></phrase>
+    <phrase title="permission_lfc_approveUnapprove" version_id="1" version_string="0.1.1"><![CDATA[Approve / unapprove contest entries]]></phrase>
+    <phrase title="permission_lfc_deleteAny" version_id="1" version_string="1"><![CDATA[Delete contests by anyone]]></phrase>
+    <phrase title="permission_lfc_deleteAnyEntry" version_id="1" version_string="1"><![CDATA[Delete contest entries by anyone]]></phrase>
+    <phrase title="permission_lfc_deleteOwn" version_id="1" version_string="1"><![CDATA[Delete contest by self]]></phrase>
+    <phrase title="permission_lfc_deleteOwnEntry" version_id="1" version_string="1"><![CDATA[Delete contest entry by self]]></phrase>
+    <phrase title="permission_lfc_editAny" version_id="1" version_string="1"><![CDATA[Edit contest by anyone]]></phrase>
+    <phrase title="permission_lfc_editAnyEntry" version_id="1" version_string="1"><![CDATA[Edit contest entries by anyone]]></phrase>
+    <phrase title="permission_lfc_editOwn" version_id="1" version_string="1"><![CDATA[Edit contest by self]]></phrase>
+    <phrase title="permission_lfc_editOwnEntry" version_id="1" version_string="1"><![CDATA[Edit contest entry by self]]></phrase>
+    <phrase title="permission_lfc_hardDeleteAny" version_id="1" version_string="1"><![CDATA[Hard-delete contest by anyone]]></phrase>
+    <phrase title="permission_lfc_hardDeleteAnyEntry" version_id="1" version_string="1"><![CDATA[Hard-delete contest entry by anyone]]></phrase>
+    <phrase title="permission_lfc_like" version_id="1" version_string="1"><![CDATA[Like contest entries]]></phrase>
+    <phrase title="permission_lfc_postContest" version_id="1" version_string="1"><![CDATA[Post new contests]]></phrase>
+    <phrase title="permission_lfc_postEntry" version_id="1" version_string="1"><![CDATA[Post new contest entries]]></phrase>
+    <phrase title="permission_lfc_unDelete" version_id="1" version_string="1"><![CDATA[Undelete contests / entries]]></phrase>
+    <phrase title="permission_lfc_view" version_id="1" version_string="1"><![CDATA[View contests]]></phrase>
+    <phrase title="permission_lfc_viewDeleted" version_id="1" version_string="1"><![CDATA[View deleted contests / entries]]></phrase>
+    <phrase title="permission_lfc_viewLikeCount" version_id="17" version_string="0.6.1"><![CDATA[View likes count before voting closes]]></phrase>
+    <phrase title="style_property_group_lfc_master" version_id="1" version_string="1"><![CDATA[FotoContest]]></phrase>
+    <phrase title="style_property_group_lfc_master_desc" version_id="1" version_string="1"><![CDATA[Coming soon after feedback :)]]></phrase>
+    <phrase title="style_property_lfcContestListPreview_description_master" version_id="1" version_string="1"><![CDATA[]]></phrase>
+    <phrase title="style_property_lfcContestListPreview_master" version_id="1" version_string="1"><![CDATA[test]]></phrase>
+    <phrase title="style_property_lfc_Slider_description_master" version_id="7" version_string="0.2.3"><![CDATA[Enable/Disable Image Slider]]></phrase>
+    <phrase title="style_property_lfc_Slider_master" version_id="7" version_string="0.2.3"><![CDATA[Enable Slider]]></phrase>
+  </phrases>
+  <route_prefixes>
+    <route_type type="public">
+      <prefix original_prefix="photo-contest-entries" class="FotoContest_Route_ContestEntries" build_link="data_only"/>
+      <prefix original_prefix="photo-contest-inline-mod" class="FotoContest_Route_InlineMod" build_link="data_only"/>
+      <prefix original_prefix="photo-contests" class="FotoContest_Route_Contests" build_link="data_only"/>
+      <prefix original_prefix="photo-contests-moderation" class="FotoContest_Route_ModerationQueue" build_link="none"/>
+    </route_type>
+  </route_prefixes>
+  <style_properties>
+    <property property_name="lfc_Slider" property_type="scalar" definition="1" group_name="lfc" title="Enable Slider" description="Enable/Disable Image Slider" css_components="" scalar_type="boolean" scalar_parameters="" display_order="1" sub_group="slider"><![CDATA[0]]></property>
+    <group group_name="lfc" display_order="1983">
+      <title>FotoContest</title>
+      <description>Coming soon after feedback :)</description>
+    </group>
+  </style_properties>
+  <templates>
+    <template title="lfc.css" version_id="8" version_string="0.2.4"><![CDATA[.contestEntryControls .contestEntryButton {
+  background: transparent url('{xen:property imagePath}/xenforo/gradients/form-button-white-25px.png') repeat-x top;
+  border: 1px solid transparent;
+  border-color: {xen:property primaryLighter};
+  border-radius: 3px;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.25);
+  color: {xen:property primaryMedium};
+  display: inline-block;
+  font-size: 11px;
+  margin-top: 5px;
+  min-width: 12px;
+  padding: 1px 5px;
+  text-align: center;
+}
+]]></template>
+    <template title="lfc_alert_preferences" version_id="2" version_string="0.1.4"><![CDATA[<h3 class="sectionHeader">{xen:phrase lfc_contests}</h3>
+<dl class="ctrlUnit">
+  <dt>{xen:phrase receive_alert_when_someone}...</dt>
+  <dd>
+    <ul>
+      <li><input type="hidden" name="alertSet[lfc_entry_like]" value="1" />
+        <label><input type="checkbox" value="1" name="alert[lfc_entry_like]" {xen:checked "!{$alertOptOuts.lfc_entry_like}"} /> {xen:phrase lfc_likes_your_contest_entry}</label
+         ><p class="hint">{xen:phrase lfc_someone_likes_one_of_your_contest_entries}</p>
+      </li>
+    </ul>
+  </dd>
+</dl>
+]]></template>
+    <template title="lfc_attachment_upload_button" version_id="4" version_string="0.2.0"><![CDATA[<xen:if is="{$attachmentParams}">
+
+  <xen:require js="js/xenforo/attachment_editor.js" />
+  <xen:if is="{$xenOptions.swfUpload} AND {$visitor.enable_flash_uploader}">
+    <xen:require js="js/swfupload/swfupload.min.js" />
+  </xen:if>
+  <xen:require css="attachment_editor.css" />
+
+  <div id="UploadedFile_ContestFile_{$attachmentParams.hash}" class="uploadedFile">
+    <a href="" class="Delete" title="Delete">x</a>
+    <div class="Progress"><div class="gauge"><div class="Meter">&nbsp;</div></div></div>
+    <div class="Filename">&nbsp;</div>
+  </div>
+
+  <input type="hidden" name="attachment_hash" value="{$attachmentParams.hash}" />
+
+  <span id="FileUploader_ContestFile_{$attachmentParams.hash}" class="buttonProxy FileUploader"
+    style="display: none"
+    data-uploaderid="ContestFile_{$attachmentParams.hash}"
+    data-placeholder="#SWFUploadPlaceHolder_ContestFile_{$attachmentParams.hash}"
+    data-trigger="#ctrl_uploader_ContestFile_{$attachmentParams.hash}"
+    data-result="#UploadedFile_ContestFile_{$attachmentParams.hash}"
+    data-postname="upload"
+    data-maxfilesize="{$attachmentConstraints.size}"
+    data-maxuploads="{$attachmentConstraints.count}"
+    data-extensions="{xen:helper implode, $attachmentConstraints.extensions, ','}"
+    data-action="{xen:link 'full:attachments/do-upload.json', '',
+      'hash={$attachmentParams.hash}',
+      'content_type={$attachmentParams.content_type}',
+      'key={$attachmentButtonKey}'}"
+    data-uniquekey="{$attachmentButtonKey}"
+    data-err-110="{xen:phrase uploaded_file_is_too_large}"
+    data-err-120="{xen:phrase uploaded_file_is_empty}"
+    data-err-130="{xen:phrase uploaded_file_does_not_have_an_allowed_extension}"
+    data-err-unknown="{xen:phrase upload_failed}">
+
+    <span id="SWFUploadPlaceHolder_ContestFile_{$attachmentParams.hash}"></span>
+
+    <input type="button" value="{xen:if {$buttonText}, {xen:raw $buttonText}, {xen:phrase upload_file}}"
+      id="ctrl_uploader_ContestFile_{$attachmentParams.hash}" class="button OverlayTrigger DisableOnSubmit"
+      data-href="{xen:link full:attachments/upload, '', '_params={$attachmentParams}', 'key={$attachmentButtonKey}'}"
+      data-hider="##FileUploader_ContestFile_{$attachmentParams.hash}" />
+    <span class="HiddenInput" data-name="_xfSessionId" data-value="{$sessionId}"></span>
+    <xen:foreach loop="$attachmentParams.content_data" key="$dataKey" value="$dataValue"><span class="HiddenInput" data-name="content_data[{$dataKey}]" data-value="{$dataValue}"></span>
+    </xen:foreach>
+  </span>
+
+  <noscript>
+    <a href="{xen:link 'attachments/upload', '', '_params={$attachmentParams}'}" class="button" target="_blank">{xen:if {$buttonText}, {xen:raw $buttonText}, {xen:phrase upload_file}}</a>
+  </noscript>
+
+  <xen:if is="{$attachment}">
+    <div id="attachment{$attachment.attachment_id}" class="AttachedFile uploadedFile existingFile">
+      <a href="{$attachment.deleteUrl}" class="AttachmentDeleter Delete jsOnly" title="Delete">x</a>
+      <div class="Filename">{$attachment.filename}</div>
+    </div>
+  </xen:if>
+
+  <xen:require css="lfc_attachment_upload_button.css" />
+  <xen:require js="js/fotocontest/upload.js" />
+</xen:if>
+]]></template>
+    <template title="lfc_attachment_upload_button.css" version_id="1" version_string="1"><![CDATA[.FileUploader {
+  display: block;
+}
+
+.uploadedFile {
+  background: #f0f7fc url('{xen:property imagePath}/xenforo/gradients/category-23px-light.png') repeat-x top;
+  border: 1px solid #d7edfc;
+  border-radius: 3px;
+  font-size: 11px;
+  padding: 5px;
+  box-sizing: border-box;
+  margin-right: 30px;
+  display: none;
+}
+
+.uploadedFile.existingFile {
+  margin-top: 10px;
+  display: block;
+}
+
+.uploadedFile .Delete {
+  float: right;
+  font-weight: bold;
+  line-height: 18px;
+  height: 18px;
+  width: 18px;
+  text-align: center;
+  border-radius: 3px;
+}
+
+.uploadedFile .Progress {
+  background: transparent url('{xen:property imagePath}/xenforo/widgets/ajaxload.info_B4B4DC_facebook.gif') center left no-repeat;
+}
+
+.uploadedFile .Progress .gauge {
+  border: 1px solid #a5cae4;
+  border-radius: 3px;
+  background-color: rgb(252, 252, 255);
+  margin: 0 20px;
+}
+
+.uploadedFile .Progress .gauge .Meter {
+  border-radius: 1px;
+  background: #6cb2e4 url('{xen:property imagePath}/xenforo/gradients/category-23px-light.png') repeat-x top;
+  height: 16px;
+}
+
+.uploadedFile .Filename {
+  line-height: 18px;
+  height: 18px;
+  padding: 0 5px;
+}
+]]></template>
+    <template title="lfc_contest_add" version_id="8" version_string="0.2.4"><![CDATA[<xen:title>{xen:phrase lfc_create_contest}</xen:title>
+
+<form action="{xen:link 'photo-contests/insert'}"
+  method="post" class="xenForm Preview AutoValidator"
+  data-redirect="on">
+  <xen:include template="lfc_contest_form">
+    <xen:set var="$savePhrase">{xen:phrase lfc_create_contest}</xen:set>
+    <xen:set var="$liveTitlePhrase">{xen:phrase lfc_create_contest}</xen:set>
+  </xen:include>
+</form>
+]]></template>
+    <template title="lfc_contest_bxSlider" version_id="7" version_string="0.2.3"><![CDATA[<script type="text/javascript">
+  $(document).ready(function(){
+    $('.bxslider').bxSlider({
+      mode: 'fade', // Type of transition between slides (horizontal, vertical, fade)
+      autoStart: true, // Auto show starts playing on load. If false, slideshow will start when the "Start" control is clicked
+      auto: true, // Slides will automatically transition
+      autoControls: true, // Show slider controls
+      autoHover: true, // Auto show will pause when mouse hovers over slider
+      adaptiveHeight: true, // Dynamically adjust slider height based on each slide's height
+      pause: 4000 // The amount of time (in ms) between each auto transition
+    });
+  });
+</script>]]></template>
+    <template title="lfc_contest_bxSlider.css" version_id="7" version_string="0.2.3"><![CDATA[/**
+ * BxSlider v4.0 - Fully loaded, responsive content slider
+ * http://bxslider.com
+ *
+ * Written by: Steven Wanderski, 2012
+ * http://stevenwanderski.com
+ * (while drinking Belgian ales and listening to jazz)
+ *
+ * CEO and founder of bxCreative, LTD
+ * http://bxcreative.com
+ */
+
+
+/** RESET AND LAYOUT
+===================================*/
+
+.bx-wrapper {
+	position: relative;
+	margin: 0 auto 60px;
+	padding: 0;
+	*zoom: 1;
+}
+
+.bx-wrapper img {
+	width: 100%;
+	display: block;
+	margin: 0 auto;
+}
+
+/** THEME
+===================================*/
+
+.bx-wrapper .bx-viewport {
+	-moz-box-shadow: 0 0 5px #ccc;
+	-webkit-box-shadow: 0 0 5px #ccc;
+	box-shadow: 0 0 5px #ccc;
+	border: solid #fff 5px;
+	left: -5px;
+	background: {xen:property contentBackground};
+}
+
+.bx-wrapper .bx-pager,
+.bx-wrapper .bx-controls-auto {
+	position: absolute;
+	bottom: -30px;
+	width: 100%;
+}
+
+/* LOADER */
+
+.bx-wrapper .bx-loading {
+	min-height: 50px;
+	background: url({xen:property imagePath}/fotocontest/bxSlider/images/bx_loader.gif) center center no-repeat #fff;
+	height: 100%;
+	width: 100%;
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 2000;
+}
+
+/* PAGER */
+
+.bx-wrapper .bx-pager {
+	text-align: center;
+	font-size: .85em;
+	font-family: Arial;
+	font-weight: bold;
+	color: #666;
+	padding-top: 20px;
+}
+
+.bx-wrapper .bx-pager .bx-pager-item,
+.bx-wrapper .bx-controls-auto .bx-controls-auto-item {
+	display: inline-block;
+	*zoom: 1;
+	*display: inline;
+}
+
+.bx-wrapper .bx-pager.bx-default-pager a {
+	background: #666;
+	text-indent: -9999px;
+	display: block;
+	width: 10px;
+	height: 10px;
+	margin: 0 5px;
+	outline: 0;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	border-radius: 5px;
+}
+
+.bx-wrapper .bx-pager.bx-default-pager a:hover,
+.bx-wrapper .bx-pager.bx-default-pager a.active {
+	background: #000;
+}
+
+/* DIRECTION CONTROLS (NEXT / PREV) */
+
+.bx-wrapper .bx-prev {
+	left: 10px;
+	background: url({xen:property imagePath}/fotocontest/bxSlider/images/controls.png) no-repeat 0 -32px;
+}
+
+.bx-wrapper .bx-next {
+	right: 10px;
+	background: url({xen:property imagePath}/fotocontest/bxSlider/images/controls.png) no-repeat -43px -32px;
+}
+
+.bx-wrapper .bx-prev:hover {
+	background-position: 0 0;
+}
+
+.bx-wrapper .bx-next:hover {
+	background-position: -43px 0;
+}
+
+.bx-wrapper .bx-controls-direction a {
+	position: absolute;
+	top: 50%;
+	margin-top: -16px;
+	outline: 0;
+	width: 32px;
+	height: 32px;
+	text-indent: -9999px;
+	z-index: 9999;
+}
+
+.bx-wrapper .bx-controls-direction a.disabled {
+	display: none;
+}
+
+/* AUTO CONTROLS (START / STOP) */
+
+.bx-wrapper .bx-controls-auto {
+	text-align: center;
+}
+
+.bx-wrapper .bx-controls-auto .bx-start {
+	display: block;
+	text-indent: -9999px;
+	width: 10px;
+	height: 11px;
+	outline: 0;
+	background: url({xen:property imagePath}/fotocontest/bxSlider/images/controls.png) -86px -11px no-repeat;
+	margin: 0 3px;
+}
+
+.bx-wrapper .bx-controls-auto .bx-start:hover,
+.bx-wrapper .bx-controls-auto .bx-start.active {
+	background-position: -86px 0;
+}
+
+.bx-wrapper .bx-controls-auto .bx-stop {
+	display: block;
+	text-indent: -9999px;
+	width: 9px;
+	height: 11px;
+	outline: 0;
+	background: url({xen:property imagePath}/fotocontest/bxSlider/images/controls.png) -86px -44px no-repeat;
+	margin: 0 3px;
+}
+
+.bx-wrapper .bx-controls-auto .bx-stop:hover,
+.bx-wrapper .bx-controls-auto .bx-stop.active {
+	background-position: -86px -33px;
+}
+
+/* PAGER WITH AUTO-CONTROLS HYBRID LAYOUT */
+
+.bx-wrapper .bx-controls.bx-has-controls-auto.bx-has-pager .bx-pager {
+	text-align: left;
+	width: 80%;
+}
+
+.bx-wrapper .bx-controls.bx-has-controls-auto.bx-has-pager .bx-controls-auto {
+	right: 0;
+	width: 35px;
+}
+
+/* IMAGE CAPTIONS */
+
+.bx-wrapper .bx-caption {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	background: #666\9;
+	background: rgba(80, 80, 80, 0.75);
+	width: 100%;
+}
+
+.bx-wrapper .bx-caption span {
+	color: #fff;
+	font-family: Arial;
+	display: block;
+	font-size: .85em;
+	padding: 10px;
+}]]></template>
+    <template title="lfc_contest_delete" version_id="1" version_string="1"><![CDATA[<xen:title>{xen:phrase lfc_delete_contest}: {$contest.title}</xen:title>
+
+<xen:navigation>
+  <xen:breadcrumb href="{xen:link full:photo-contests, $contest}">
+    {$contest.title}
+  </xen:breadcrumb>
+</xen:navigation>
+
+<form action="{xen:link 'photo-contests/delete', $contest}" method="post" class="xenForm formOverlay">
+
+  <xen:include template="helper_deletion_type_unit" />
+
+  <dl class="ctrlUnit submitUnit">
+    <dt></dt>
+    <dd><input type="submit" value="{xen:phrase lfc_delete_contest}" class="button primary" /></dd>
+  </dl>
+
+  <input type="hidden" name="_xfConfirm" value="1" />
+  <input type="hidden" name="_xfToken" value="{$visitor.csrf_token_page}" />
+</form>
+]]></template>
+    <template title="lfc_contest_edit" version_id="8" version_string="0.2.4"><![CDATA[<xen:title>{xen:phrase lfc_edit_contest}</xen:title>
+
+<xen:navigation>
+  <xen:breadcrumb href="{xen:link full:photo-contests, $contest}">
+    {$contest.title}
+  </xen:breadcrumb>
+</xen:navigation>
+
+<form action="{xen:link 'photo-contests/update', $contest}" method="post" class="xenForm Preview AutoValidator" data-redirect="on">
+  <xen:include template="lfc_contest_form">
+    <xen:set var="$savePhrase">{xen:phrase save_changes}</xen:set>
+    <xen:set var="$liveTitlePhrase">{xen:phrase lfc_edit_contest}</xen:set>
+    <xen:set var="$isUpdate">true</xen:set>
+  </xen:include>
+</form>
+]]></template>
+    <template title="lfc_contest_entry_add" version_id="1" version_string="1"><![CDATA[<xen:title>{xen:phrase lfc_create_contest_entry}</xen:title>
+
+<xen:navigation>
+  <xen:breadcrumb href="{xen:link photo-contests, $contest}">
+    {$contest.title}
+  </xen:breadcrumb>
+</xen:navigation>
+
+<form action="{xen:link 'photo-contests/insert-contest-entry', $contest}"
+  method="post"
+  class="xenForm Preview AutoValidator"
+  data-redirect="on">
+  <xen:include template="lfc_contest_entry_form">
+    <xen:set var="$isInsert">true</xen:set>
+    <xen:set var="$savePhrase">{xen:phrase lfc_create_contest_entry}</xen:set>
+    <xen:set var="$liveTitlePhrase">{xen:phrase lfc_create_contest_entry}</xen:set>
+  </xen:include>
+</form>
+]]></template>
+    <template title="lfc_contest_entry_alert_like" version_id="2" version_string="0.1.4"><![CDATA[{xen:phrase lfc_x_liked_your_contest_entry,
+  'name={xen:helper username, $user, 'subject'}',
+  'title=<a href="{xen:link photo-contest-entries, $content}" class="PopupItemLink">{$content.title}</a>'}
+]]></template>
+    <template title="lfc_contest_entry_delete" version_id="1" version_string="1"><![CDATA[<xen:title>{xen:phrase lfc_delete_contest_entry}: {$contestEntry.title}</xen:title>
+
+<xen:navigation>
+  <xen:breadcrumb href="{xen:link full:photo-contests, $contest}">
+    {$contest.title}
+  </xen:breadcrumb>
+  <xen:breadcrumb href="{xen:link full:photo-contest-entries, $contestEntry}">
+    {$contestEntry.title}
+  </xen:breadcrumb>
+</xen:navigation>
+
+<form action="{xen:link 'photo-contest-entries/delete', $contestEntry}"
+  method="post"
+  class="xenForm formOverlay">
+
+  <xen:include template="helper_deletion_type_unit" />
+
+  <dl class="ctrlUnit submitUnit">
+    <dt></dt>
+    <dd>
+      <input type="submit" value="{xen:phrase lfc_delete_contest_entry}" class="button primary" />
+    </dd>
+  </dl>
+
+  <input type="hidden" name="_xfConfirm" value="1" />
+  <input type="hidden" name="_xfToken" value="{$visitor.csrf_token_page}" />
+</form>
+]]></template>
+    <template title="lfc_contest_entry_edit" version_id="1" version_string="1"><![CDATA[<xen:title>{xen:phrase lfc_edit_contest_entry}: {$contestEntry.title} </xen:title>
+
+<xen:navigation>
+  <xen:breadcrumb href="{xen:link photo-contests, $contest}">
+    {$contest.title}
+  </xen:breadcrumb>
+  <xen:breadcrumb href="{xen:link photo-contest-entries, $contestEntry}">
+    {$contestEntry.title}
+  </xen:breadcrumb>
+</xen:navigation>
+
+<form action="{xen:link 'photo-contest-entries/update', $contestEntry}"
+  method="post"
+  class="xenForm Preview AutoValidator"
+  data-redirect="on">
+  <xen:include template="lfc_contest_entry_form">
+    <xen:set var="$savePhrase">{xen:phrase save_changes}</xen:set>
+    <xen:set var="$liveTitlePhrase">{xen:phrase lfc_edit_contest_entry}</xen:set>
+  </xen:include>
+</form>
+]]></template>
+    <template title="lfc_contest_entry_form" version_id="4" version_string="0.2.0"><![CDATA[<xen:container var="$head.robots">
+  <meta name="robots" content="noindex" />
+</xen:container>
+
+<xen:require css="lfc_contest_entry_form.css" />
+
+<dl class="ctrlUnit fullWidth">
+  <dt><label for="ctrl_title">{xen:phrase lfc_contest_entry_label_title}:</label></dt>
+  <dd>
+    <input type="text"
+      name="title"
+      value="{$contestEntry.title}"
+      class="textCtrl titleCtrl"
+      data-liveTitleTemplate="{$liveTitlePhrase}: <em>%s</em>"
+      id="ctrl_title"
+      maxlength="100"
+      placeholder="{xen:phrase lfc_contest_entry_placeholder_title}"
+      autofocus="true" />
+  </dd>
+</dl>
+
+<dl class="ctrlUnit fullWidth">
+  <dt><label for="ctrl_title">{xen:phrase lfc_contest_entry_label_description}</label></dt>
+  <dd>{xen:raw $editorTemplate}</dd>
+</dl>
+
+<dl class="ctrlUnit submitUnit">
+  <dt></dt>
+  <dd>
+    <input type="submit" value="{$savePhrase}" accesskey="s" class="button primary" />
+    <xen:include template="lfc_multiple_attachment_upload_button" />
+  </dd>
+</dl>
+
+<xen:if is="{$attachmentParams}">
+  <dl class="ctrlUnit AttachedFilesUnit">
+    <dt><label for="ctrl_uploader">{xen:phrase attached_files}:</label></dt>
+    <dd>
+      <xen:include template="attachment_editor">
+        <xen:set var="$attachments" value="{$attachmentParams.attachments}" />
+      </xen:include>
+    </dd>
+  </dl>
+</xen:if>
+
+<input type="hidden" name="_xfToken" value="{$visitor.csrf_token_page}" />
+
+<xen:comment><xen:include template="editor" /></xen:comment>
+]]></template>
+    <template title="lfc_contest_entry_form.css" version_id="20" version_string="0.6.5"><![CDATA[.lfc_contest_entry_add .uploadedFile {
+  margin-right: 0;
+}
+
+.lfc_contest_entry_add .AttachmentEditor .secondaryContent .label,
+.lfc_contest_entry_add .AttachmentEditor .AttachmentInserter,
+
+.lfc_contest_entry_edit .AttachmentEditor .secondaryContent .label,
+.lfc_contest_entry_edit .AttachmentEditor .AttachmentInserter {
+  display: none;
+}
+]]></template>
+    <template title="lfc_contest_entry_like" version_id="1" version_string="1"><![CDATA[<xen:title>{$contestEntry.title} - {xen:if $like, '{xen:phrase lfc_unlike_contest_entry}', '{xen:phrase lfc_like_contest_entry}'}</xen:title>
+<xen:h1>{xen:if $like, '{xen:phrase lfc_unlike_contest_entry}', '{xen:phrase lfc_like_contest_entry}'}</xen:h1>
+
+<xen:navigation>
+  <xen:breadcrumb href="{xen:link photo-contests, $contest}">
+    {$contest.title}
+  </xen:breadcrumb>
+  <xen:breadcrumb href="{xen:link photo-contest-entries, $contestEntry}">
+    {$contestEntry.title}
+  </xen:breadcrumb>
+</xen:navigation>
+
+<form action="{xen:link 'photo-contest-entries/like', $contestEntry}"
+  method="post"
+  class="xenForm">
+  <dl class="ctrlUnit fullWidth surplusLabel">
+    <dt></dt>
+    <dd>
+      <xen:if is="{$like}">
+        {xen:phrase lfc_you_sure_you_want_to_unlike_this_contest_entry}
+      <xen:else />
+        {xen:phrase lfc_you_sure_you_want_to_like_this_contest_entry}
+      </xen:if>
+    </dd>
+  </dl>
+
+  <dl class="ctrlUnit submitUnit">
+    <dt></dt>
+    <dd>
+      <input type="submit"
+        value="{xen:if $like,
+          '{xen:phrase lfc_unlike_contest_entry}',
+          '{xen:phrase lfc_like_contest_entry}'}"
+        accesskey="s"
+        class="button primary"
+        autofocus="true" />
+    </dd>
+  </dl>
+
+  <input type="hidden" name="_xfToken" value="{$visitor.csrf_token_page}" />
+</form>
+]]></template>
+    <template title="lfc_contest_entry_like_button" version_id="3" version_string="0.1.5"><![CDATA[<xen:require css="lfc_contest_entry_like_button.css" />
+
+<xen:set var="$contestEntryId">contest-entry-{$contestEntry.photo_contest_entry_id}</xen:set>
+
+<xen:if is="{$visitor.user_id}">
+  <xen:set var="$linkHref">{xen:link 'photo-contest-entries/like', $contestEntry}</xen:set>
+  <xen:set var="$dataContainer">#likes-{$contestEntryId}</xen:set>
+<xen:else />
+  <xen:set var="$linkHref">{xen:link login}</xen:set>
+  <xen:set var="$loginControl">LoginControl</xen:set>
+</xen:if>
+
+<label for="{$loginControl}">
+  <a href="{$linkHref}"
+    class="contestEntryButton LikeLink item control Tooltip {xen:if $contestEntry.like_date, unlike, like}"
+    data-container="{$dataContainer}"
+    title="{xen:if $contestEntry.like_date, {xen:phrase unlike}, {xen:phrase like}}">
+    <span class="LikeLabel">{xen:if $contestEntry.like_date, {xen:phrase lfc_contest_entry_unlike}, {xen:phrase lfc_contest_entry_like}}</span>
+
+    <span id="likes-{$contestEntryId}" class="likesContainer">
+      <span class="likesSummary">
+        <span class="LikeText">
+          <span class="LikeCounter">
+            {$contestEntry.likes}
+          </span>
+        </span>
+      </span>
+    </span>
+  </a>
+</label>
+]]></template>
+    <template title="lfc_contest_entry_like_button.css" version_id="2" version_string="0.1.4"><![CDATA[]]></template>
+    <template title="lfc_contest_entry_list_item" version_id="18" version_string="0.6.2"><![CDATA[<xen:require css="lfc_contest_entry_list_item.css" />
+
+<xen:set var="$contestEntryId">contest-entry-{$contestEntry.photo_contest_entry_id}</xen:set>
+
+<xen:if is="{$contestEntry.position}">
+  <xen:set var="$winnerClass">contestWinner contestWinner-{$contestEntry.position}</xen:set>
+</xen:if>
+
+<xen:if is="{$contest.hide_authors}">
+  <xen:set var="$author">{$contestEntry.title}</xen:set>
+<xen:else />
+  <xen:set var="$author">{$contestEntry.username}</xen:set>
+  <xen:set var="$showAvatar">true</xen:set>
+</xen:if>
+
+<li class="contestEntryListItem {$contestEntry.entry_state} {$winnerClass}"
+  data-author="{$author}"
+  id="{$contestEntryId}">
+
+  <div class="contestEntry">
+    <div class="contestEntryInfo">
+      <xen:if is="{$canViewAttachments}">
+        <a href="{xen:link attachments, $attachment}"
+          target="_blank" class="LbTrigger"
+          data-href="{xen:link misc/lightbox}">
+            <img src="{xen:helper lfc_thumb, $attachment, $xenOptions.lfcThumbnailEntrySmall}" alt="{$attachment.filename}" class="LbImage" />
+        </a>
+      <xen:else />
+        <a href="javascript:void(0);" />
+      </xen:if>
+
+      <div class="titleSection">
+        <h3>
+          <xen:if is="{$contestEntry.canInlineMod}">
+            <input type="checkbox"
+              name="contestEntries[]"
+              value="{$contestEntry.photo_contest_entry_id}"
+              class="InlineModCheck" data-target="#{$contestEntryId}"
+              title="{xen:phrase lfc_select_contest_entry}: {$contestEntry.title}" />
+          </xen:if>
+
+          <a href="{xen:link photo-contest-entries, $contestEntry}"
+            class="title Tooltip" title="{$contestEntry.title}">
+            {xen:helper snippet, $contestEntry.title, 20}
+          </a>
+        </h3>
+
+        <xen:if hascontent="true">
+          <h4 class="muted">
+            <xen:contentcheck>
+              {xen:helper snippet, $contestEntry.description, 40}
+            </xen:contentcheck>
+          </h4>
+          <xen:else />
+          <h4 class="muted">{xen:phrase lfc_contest_entry_no_description}</h4>
+        </xen:if>
+
+      </div>
+    </div>
+
+    <xen:if hascontent="true">
+      <div class="contestEntryControls">
+        <xen:contentcheck>
+          <xen:if is="{$showAvatar}">
+            <span class="Tooltip" title="{$contestEntry.username}">
+              <xen:avatar user="$contestEntry" size="s" img="true" class="contestEntryAvatar" />
+            </span>
+          </xen:if>
+
+          <xen:if is="{$contest.isOpenToVotes} AND {$contestEntry.canLike}">
+            <xen:include template="lfc_contest_entry_like_button" />
+          </xen:if>
+
+          <xen:if is="{$contest.isClosedToVotes} AND {$contestEntry.position}">
+            <span class="contestEntryButton Tooltip" title="{$contestEntry.position} {xen:phrase lfc_contest_entry_position}"><i class="fa fa-trophy fa-fw"></i> {$contestEntry.position}</span>
+          </xen:if>
+          <xen:if is="{$contest.isClosedToVotes}">
+            <span class="contestEntryButton Tooltip" title="{xen:phrase lfc_likes}"><i class="fa fa-thumbs-up fa-fw"></i> {$contestEntry.likes}</span>
+          </xen:if>
+
+          <xen:if is="{$contestEntry.canReport}">
+            <xen:include template="lfc_contest_entry_report_button" />
+          </xen:if>
+
+        </xen:contentcheck>
+      </div>
+    </xen:if>
+
+  </div>
+</li>
+]]></template>
+    <template title="lfc_contest_entry_list_item.css" version_id="8" version_string="0.2.4"><![CDATA[.contestEntryListItem {
+  border: 1px solid {xen:property primaryLighter};
+  border-radius: 4px;
+  box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.2);
+  margin: 0 8px 10px 0;
+  padding: 5px;
+  position: relative;
+  display: inline-block;
+}
+  .contestEntryListItem .titleSection {
+    padding: 3px;
+    zoom: 1;
+    overflow: hidden;
+  }
+
+  .contestEntryListItem .titleSection h3, .contestEntryListItem .titleSection h4 {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .contestEntryListItem .titleSection h3 {
+    font-weight: bold;
+    font-size: 14px;
+  }
+
+  .contestEntryListItem .titleSection h4 {
+    font-size: 10px;
+  }
+
+  .contestEntryListItem.deleted {
+    opacity: 0.5;
+  }
+
+  .contestEntryListItem .contestEntryControls {
+    position: relative;
+    padding: 0 5px 5px 5px;
+    text-align: right;
+    border-bottom: 0;
+    border-radius: 0 0 3px 3px;
+    border-top: 1px solid {xen:property primaryLighter};
+    line-height: 20px;
+    min-height: 29px;
+  }
+
+    .contestEntryListItem .contestEntryAvatar {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+    }
+
+    .contestEntryListItem .contestEntryAvatar img {
+      width: 20px;
+      height: 20px;
+      padding: 1px;
+      box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.25);
+    }
+
+  .contestEntryListItem .InlineModCheck {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+  }
+
+    .contestEntryListItem.InlineModChecked
+    {
+      {xen:property inlineModChecked}
+    }
+
+  .contestEntryListItem .SquareThumb {
+    width: {$xenOptions.lfcAttachmentThumbnailDimensions}px;
+    height: {$xenOptions.lfcAttachmentThumbnailDimensions}px;
+  }
+
+{xen:helper clearfix, '.contestEntryList'}]]></template>
+    <template title="lfc_contest_entry_report" version_id="1" version_string="1"><![CDATA[<xen:title>{xen:phrase lfc_report_contest_entry}: {$contestEntry.title} </xen:title>
+
+<xen:navigation>
+  <xen:breadcrumb href="{xen:link full:photo-contests, $contest}">
+    {$contest.title}
+  </xen:breadcrumb>
+  <xen:breadcrumb href="{xen:link full:photo-contest-entries, $contestEntry}">
+    {$contest.title}
+  </xen:breadcrumb>
+</xen:navigation>
+
+<form action="{xen:link 'photo-contest-entries/report', $contestEntry}"
+  method="post" class="xenForm formOverlay AutoValidator">
+
+  <dl class="ctrlUnit">
+    <dt><label for="ctrl_message">{xen:phrase report_reason}:</label></dt>
+    <dd>
+      <textarea name="message" id="ctrl_message" rows="2" class="textCtrl Elastic"></textarea>
+    </dd>
+  </dl>
+
+  <dl class="ctrlUnit submitUnit">
+    <dt></dt>
+    <dd>
+      <input type="submit"
+        value="{xen:phrase lfc_report_contest_entry}"
+        accesskey="s" class="button primary" />
+    </dd>
+  </dl>
+
+  <input type="hidden" name="_xfToken" value="{$visitor.csrf_token_page}" />
+</form>
+]]></template>
+    <template title="lfc_contest_entry_report_button" version_id="2" version_string="0.1.4"><![CDATA[<a href="{xen:link 'photo-contest-entries/report', $contestEntry}"
+  class="contestEntryButton OverlayTrigger item control report Tooltip"
+  data-cacheOverlay="false"
+  title="{xen:phrase report}"><span></span><i class="fa fa-exclamation-circle"></i>
+</a>
+]]></template>
+    <template title="lfc_contest_entry_view" version_id="23" version_string="0.6.8"><![CDATA[<xen:require css="lfc.css" />
+<xen:require css="lfc_contest_entry_view.css" />
+<xen:if is="{xen:property lfc_Slider}">
+  <xen:require css="lfc_contest_bxSlider.css" />
+  <xen:require js="js/fotocontest/jquery.bxslider.min.js" />
+</xen:if>
+<xen:require js="js/fotocontest/fotocontest.js" />
+<xen:include template="lfc_font_awesome" />
+
+<xen:title>{$contestEntry.title} | {$contest.title} | {xen:phrase lfc_contests}</xen:title>
+<xen:h1>{$contestEntry.title}</xen:h1>
+
+<xen:container var="$head.canonical">
+  <link rel="canonical" href="{xen:link 'canonical:photo-contest-entries', $contestEntry}" />
+</xen:container>
+
+<xen:container var="$head.openGraph">
+  <xen:include template="open_graph_meta">
+    <xen:set var="$url">{xen:link 'canonical:photo-contest-entries', $contestEntry}</xen:set>
+    <xen:set var="$title">{$contestEntry.title}</xen:set>
+    <xen:set var="$description">{xen:helper snippet, $contest.description, 155}</xen:set>
+    <xen:set var="$ogExtraHtml">
+      <meta property="og:image" content="{xen:helper fullurl, $contestEntry.attachment.viewUrl, 1}" />
+    </xen:set>
+  </xen:include>
+</xen:container>
+
+<xen:description>
+  <xen:if is="!{$contest.hide_authors}">
+  {xen:phrase lfc_contest_entry_in_x_posted_by_y_date_z,
+    'contest=<a href="{xen:link photo-contests, $contest}">{$contest.title}</a>',
+    'name={xen:helper username, $contestEntry}',
+    'date=<a href="{xen:link photo-contest-entries, $contestEntry}">
+      {xen:datetime $contestEntry.created_at, html}</a>'}
+  <xen:else />
+    {xen:phrase lfc_contest_entry_in_y_date_z,
+      'contest=<a href="{xen:link photo-contests, $contest}">{$contest.title}</a>',
+      'date=<a href="{xen:link photo-contest-entries, $contestEntry}">
+        {xen:datetime $contestEntry.created_at, html}</a>'}
+  </xen:if>
+</xen:description>
+
+<xen:navigation>
+  <xen:breadcrumb href="{xen:link photo-contests, $contest}">
+    {$contest.title}
+  </xen:breadcrumb>
+  <xen:breadcrumb href="{xen:link photo-contest-entries, $contestEntry}">
+    {$contestEntry.title}
+  </xen:breadcrumb>
+</xen:navigation>
+
+<xen:if is="{$contestEntry.entry_state} == 'deleted'">
+  <xen:include template="lfc_view_status">
+    <xen:set var="$title">{xen:phrase lfc_contest_entry_status}</xen:set>
+    <xen:set var="$deleted">true</xen:set>
+  </xen:include>
+</xen:if>
+
+<xen:if hascontent="true">
+  <div class="pageNavLinkGroup">
+    <div class="linkGroup">
+      <div class="Popup">
+        <a rel="Menu">{xen:phrase lfc_contest_tools}</a>
+        <div class="Menu">
+          <div class="primaryContent menuHeader">
+            <h3>{xen:phrase lfc_contest_tools}</h3>
+          </div>
+          <ul class="secondaryContent blockLinksList">
+            <xen:contentcheck>
+              <xen:if is="{$contestEntry.canEdit}">
+                <li>
+                  <a href="{xen:link 'photo-contest-entries/edit', $contestEntry}">
+                    {xen:phrase lfc_edit_contest_entry}</a>
+                </li>
+              </xen:if>
+              <xen:if is="{$contestEntry.canDelete}">
+                <li>
+                  <a href="{xen:link 'photo-contest-entries/delete', $contestEntry}"
+                    class="OverlayTrigger">
+                    {xen:phrase lfc_delete_contest_entry}
+                  </a>
+                </li>
+              </xen:if>
+            </xen:contentcheck>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</xen:if>
+
+<xen:include template="lfc_contest_entry_view_tabs">
+  <xen:set var="$jsTabs">true</xen:set>
+</xen:include>
+
+<ul id="ContestEntryPanes">
+  <li id="contestEntries">
+    <xen:if is="{$contestEntryHide}">
+      <div class="section">
+        <p>{xen:phrase lfc_contest_status_hide_entries,
+          'date={xen:datetime $contest.voting_opens_on, html}'}</p>
+      </div>
+    <xen:else />
+      <div class="section sectionContestEntry">
+        <xen:include template="lfc_contest_entry_view_images" />
+      </div>
+    </xen:if>
+  </li>
+  <li id="contestEntryInformation">
+    <div class="section">
+      {xen:raw $contestEntry.descriptionParsed}
+    </div>
+  </li>
+</ul>
+
+<xen:include template="share_page" />
+<xen:if is="{xen:property lfc_Slider}">
+  <xen:include template="lfc_contest_bxSlider" />
+</xen:if>
+]]></template>
+    <template title="lfc_contest_entry_view.css" version_id="8" version_string="0.2.4"><![CDATA[.sectionContestEntry {
+  text-align: center;
+  max-width: 80%;
+}
+
+  .sectionContestEntry #primaryImage {
+    max-width: 100%;
+    box-shadow: 0 0 5px #ccc;
+    border: solid #fff 5px;
+  }
+
+  .sectionContestEntry .contestEntryThumbs {
+    margin: 5px auto;
+  }
+
+    .sectionContestEntry .contestEntryThumbs li {
+      display: inline-block;
+    }
+
+    .sectionContestEntry .contestEntryThumbs li img {
+      width: 35px;
+      height: 35px;
+    }
+
+.contestEntryControls {
+  max-width: 100%;
+  border: none;
+  padding: 0;
+  margin: 5px auto;
+  text-align: center;
+}
+]]></template>
+    <template title="lfc_contest_entry_view_images" version_id="23" version_string="0.6.8"><![CDATA[<xen:if is="{xen:property lfc_Slider}">
+  <xen:if is="{$multipleEntryImages}">
+    <div class="bx-wrapper">
+      <ul class="bxslider">
+        <xen:foreach loop="$contestEntry.attachments" value="$attachment">
+          <li><a href="{$attachment.viewUrl}"><img src="{xen:helper lfc_thumb, $attachment, $xenOptions.lfcThumbnailEntryMedium}" alt="{$attachment.filename}" /></a></li>
+        </xen:foreach>
+      </ul>
+    </div>
+  <xen:else />
+    <img id="primaryImage" src="{xen:helper lfc_thumb, $attachment, $xenOptions.lfcThumbnailEntryMedium}" alt="{$attachment.filename}" />
+  </xen:if>
+<xen:elseif is="!{xen:property lfc_Slider}" />
+  <xen:if is="{$multipleEntryImages}">
+    <div class="contestEntryThumbs">
+      <ul>
+        <xen:foreach loop="$contestEntry.attachments" value="$attachment">
+          <li class="avatar">
+            <a href="{$attachment.viewUrl}">
+              <img src="{xen:helper lfc_thumb, $attachment, $xenOptions.lfcThumbnailEntrySmall}" data-src="{xen:helper lfc_thumb, $attachment, $xenOptions.lfcThumbnailEntryMedium}"
+                alt="{$attachment.filename}" />
+            </a>
+          </li>
+        </xen:foreach>
+      </ul>
+    </div>
+  </xen:if>
+
+  <img id="primaryImage" src="{xen:helper lfc_thumb, $attachment, $xenOptions.lfcThumbnailEntryMedium}" alt="{$attachment.filename}" />
+</xen:if>
+
+<div class="sectionMain contestEntryControls">
+  <xen:if is="{$contest.isOpenToVotes} AND {$contestEntry.canLike}">
+    <xen:include template="lfc_contest_entry_like_button" />
+  </xen:if>
+  <xen:if is="{$contestEntry.canReport}">
+    <xen:include template="lfc_contest_entry_report_button" />
+  </xen:if>
+</div>
+]]></template>
+    <template title="lfc_contest_entry_view_tabs" version_id="11" version_string="0.4.0"><![CDATA[<xen:if is="{$jsTabs}">
+  <ul class="tabs Tabs" data-panes="#ContestEntryPanes > li" data-history="on">
+<xen:else />
+  <ul class="tabs">
+</xen:if>
+  <li>
+    <a href="{xen:link 'canonical:photo-contest-entries', $contestEntry}#contestEntries">
+      {xen:phrase lfc_contest_entry_images}
+    </a>
+  </li>
+  <xen:if is="{$contestEntry.description}">
+    <li>
+      <a href="{xen:link 'canonical:photo-contest-entries', $contestEntry}#contestEntryInformation">
+        {xen:phrase lfc_contest_entry_description}
+      </a>
+    </li>
+  </xen:if>
+  <xen:if is="{$thread}">
+    <li class="{xen:if "{$selectedTab} == 'discussion'", active}">
+      <a href="{xen:link 'canonical:threads', $thread}" onclick="window.location='{xen:link 'canonical:threads', $thread}';return false;">
+        {xen:phrase lfc_contest_entry_discussion}
+      </a>
+    </li>
+  </xen:if>
+</ul>
+]]></template>
+    <template title="lfc_contest_form" version_id="22" version_string="0.6.7"><![CDATA[<xen:container var="$head.robots">
+  <meta name="robots" content="noindex" />
+</xen:container>
+
+<xen:require css="lfc_contest_form.css" />
+
+<dl class="ctrlUnit fullWidth">
+  <dt><label for="ctrl_title">{xen:phrase lfc_contest_label_title}:</label></dt>
+  <dd>
+    <input type="text"
+      name="title"
+      value="{$contest.title}"
+      class="textCtrl titleCtrl"
+      data-liveTitleTemplate="{$liveTitlePhrase}: <em>%s</em>"
+      id="ctrl_title"
+      maxlength="100"
+      placeholder="{xen:phrase lfc_contest_placeholder_title}"
+      autofocus="true" />
+  </dd>
+</dl>
+
+<dl class="ctrlUnit fullWidth">
+  <dt><label for="ctrl_title">{xen:phrase lfc_contest_label_description}</label></dt>
+  <dd>{xen:raw $editorTemplate}</dd>
+</dl>
+
+<dl class="ctrlUnit fullWidth">
+  <dt><label for="ctrl_title">{xen:phrase lfc_contest_label_upload_file}:</label></dt>
+  <dd>
+    <xen:include template="lfc_attachment_upload_button">
+      <xen:set var="$attachmentButtonKey">lfc</xen:set>
+      <xen:map from="$contest.attachment" to="$attachment" />
+    </xen:include>
+  </dd>
+</dl>
+
+<h3 class="textHeading">{xen:phrase lfc_contest_timeline}</h3>
+
+<dl class="ctrlUnit">
+  <dt>
+    <label for="ctrl_posting_opens_on">
+      {xen:phrase lfc_contest_label_posting_opens_on}:
+    </label>
+  </dt>
+  <dd>
+    <input type="date"
+      name="posting_opens_on"
+      value="{xen:if $contest.posting_opens_on, {xen:date $contest.posting_opens_on, picker}, ''}"
+      class="textCtrl"
+      size="10"
+      id="ctrl_posting_opens_on" />
+  </dd>
+</dl>
+
+<dl class="ctrlUnit">
+  <dt>
+    <label for="ctrl_posting_closes_on">
+      {xen:phrase lfc_contest_label_posting_closes_on}:
+    </label>
+  </dt>
+  <dd>
+    <input type="date"
+      name="posting_closes_on"
+      value="{xen:if $contest.posting_closes_on, {xen:date $contest.posting_closes_on, picker}, ''}"
+      class="textCtrl"
+      size="10"
+      id="ctrl_posting_closes_on" />
+  </dd>
+</dl>
+
+<fieldset>
+  <dl class="ctrlUnit">
+    <dt>
+      <label for="ctrl_voting_opens_on">
+        {xen:phrase lfc_contest_label_voting_opens_on}:
+      </label>
+    </dt>
+    <dd>
+      <input type="date"
+        name="voting_opens_on"
+        value="{xen:if $contest.voting_opens_on, {xen:date $contest.voting_opens_on, picker}, ''}"
+        class="textCtrl"
+        size="10"
+        id="ctrl_voting_opens_on" />
+    </dd>
+  </dl>
+
+  <dl class="ctrlUnit">
+    <dt></dt>
+    <dd>
+      <label for="ctrl_hide_entries">
+      <input type="checkbox" name="hide_entries"
+        id="ctrl_hide_entries" value="1" {xen:checked {$contest.hide_entries}} />
+      {xen:phrase lfc_contest_label_hide_entries}
+    </dd>
+  </dl>
+
+  <dl class="ctrlUnit">
+    <dt>
+      <label for="ctrl_voting_closes_on">
+        {xen:phrase lfc_contest_label_voting_closes_on}:
+      </label>
+    </dt>
+    <dd>
+      <input type="date"
+        name="voting_closes_on"
+        value="{xen:if $contest.voting_closes_on, {xen:date $contest.voting_closes_on, picker}, ''}"
+        class="textCtrl"
+        size="10"
+        id="ctrl_voting_closes_on" />
+    </dd>
+  </dl>
+</fieldset>
+
+<h3 class="textHeading">{xen:phrase lfc_contest_options}</h3>
+
+<dl class="ctrlUnit">
+  <dt>
+    <label for="ctrl_max_winners_count">
+      {xen:phrase lfc_contest_label_max_winners_count}:
+    </label>
+    </dt>
+  <dd>
+    <input type="text"
+      name="max_winners_count"
+      value="{$contest.max_winners_count}"
+      class="textCtrl"
+      size="10"
+      id="ctrl_max_winners_count" />
+  </dd>
+</dl>
+
+<dl class="ctrlUnit">
+  <dt></dt>
+  <dd>
+    <label for="ctrl_allow_tied_winners">
+      <input type="checkbox" name="allow_tied_winners"
+        id="ctrl_allow_tied_winners" value="1" {xen:checked {$contest.allow_tied_winners}} />
+      {xen:phrase lfc_contest_label_allow_tied_winners}
+    </label>
+  </dd>
+</dl>
+
+<dl class="ctrlUnit">
+  <dt>
+    <label for="ctrl_max_entry_count">
+      {xen:phrase lfc_contest_label_max_entry_count}:
+    </label>
+    </dt>
+  <dd>
+    <input type="text"
+      name="max_entry_count"
+      value="{$contest.max_entry_count}"
+      class="textCtrl"
+      size="10"
+      id="ctrl_max_entry_count" />
+  </dd>
+</dl>
+
+<dl class="ctrlUnit">
+  <dt>
+    <label for="ctrl_max_images_per_entry">
+      {xen:phrase lfc_contest_label_max_images_per_entry}:
+    </label>
+    </dt>
+  <dd>
+    <input type="text"
+      name="max_images_per_entry"
+      value="{$contest.max_images_per_entry}"
+      class="textCtrl"
+      size="10"
+      id="ctrl_max_images_per_entry" />
+  </dd>
+</dl>
+
+<dl class="ctrlUnit">
+  <dt>
+    <label for="ctrl_max_votes_count">
+      {xen:phrase lfc_contest_label_max_votes_count}:
+    </label>
+    </dt>
+  <dd>
+    <input type="text"
+      name="max_votes_count"
+      value="{$contest.max_votes_count}"
+      class="textCtrl"
+      size="10"
+      id="ctrl_max_votes_count" />
+  </dd>
+</dl>
+
+<dl class="ctrlUnit">
+  <dt></dt>
+  <dd>
+    <ul>
+      <li>
+        <label for="ctrl_moderate_entries">
+          <input type="checkbox" name="moderate_entries"
+            id="ctrl_moderate_entries" value="1" {xen:checked {$contest.moderate_entries}} />
+          {xen:phrase lfc_contest_label_moderate_entries}
+        </label>
+      </li>
+      <li>
+        <label for="ctrl_hide_authors">
+          <input type="checkbox" name="hide_authors"
+            id="ctrl_hide_authors" value="1" {xen:checked {$contest.hide_authors}} />
+          {xen:phrase lfc_contest_label_hide_authors}
+        </label>
+      </li>
+    </ul>
+  </dd>
+</dl>
+
+<dl class="ctrlUnit">
+  <dt>
+    <label for="entry_order">
+      {xen:phrase lfc_contest_label_entry_order}:
+    </label>
+    </dt>
+  <dd>
+    <select name="entry_order">
+      <option value="latest" {xen:selected "{$contest.entry_order} == 'latest'"}>{xen:phrase lfc_contest_entry_order_latest}</option>
+      <option value="oldest" {xen:selected "{$contest.entry_order} == 'oldest'"}>{xen:phrase lfc_contest_entry_order_oldest}</option>
+      <option value="most_likes" {xen:selected "{$contest.entry_order} == 'most_likes'"}>{xen:phrase lfc_contest_entry_order_most_likes}</option>
+      <option value="least_likes" {xen:selected "{$contest.entry_order} == 'least_likes'"}>{xen:phrase lfc_contest_entry_order_least_likes}</option>
+    </select>
+  </dd>
+</dl>
+
+<h3 class="textHeading">{xen:phrase lfc_contest_permissions}</h3>
+
+<dl class="ctrlUnit">
+  <dt>{xen:phrase lfc_contest_label_usergroup_post}:</dt>
+  <dd>
+    <xen:include template="lfc_helper_usergroup_checkbox">
+      <xen:set var="$field">post</xen:set>
+      <xen:map from="$allPostUserGroups" to="$allUserGroups" />
+      <xen:map from="$selectedPostUserGroupIds" to="$selectedUserGroupIds" />
+    </xen:include>
+    <p class="explain">{xen:phrase lfc_contest_explain_usergroup_post}</p>
+  </dd>
+</dl>
+
+<dl class="ctrlUnit">
+  <dt>{xen:phrase lfc_contest_label_usergroup_vote}:</dt>
+  <dd>
+    <xen:include template="lfc_helper_usergroup_checkbox">
+      <xen:set var="$field">vote</xen:set>
+      <xen:map from="$allVoteUserGroups" to="$allUserGroups" />
+      <xen:map from="$selectedVoteUserGroupIds" to="$selectedUserGroupIds" />
+    </xen:include>
+    <p class="explain">{xen:phrase lfc_contest_explain_usergroup_vote}</p>
+  </dd>
+</dl>
+
+<h3 class="textHeading">{xen:phrase lfc_contest_other}</h3>
+<xen:if is="{$isUpdate}">
+  <dl class="ctrlUnit">
+    <dt></dt>
+    <dd>
+      <ul>
+        <li>
+          <label for="ctrl_contest_closed">
+            <input type="checkbox" name="contest_closed"
+              id="ctrl_contest_closed" value="1" {xen:checked {$contest.contest_closed}} />
+            {xen:phrase lfc_contest_label_contest_closed}
+          </label>
+        </li>
+      </ul>
+    </dd>
+  </dl>
+</xen:if>
+
+<dl class="ctrlUnit">
+  <dt></dt>
+  <dd>
+    <label for="ctrl_is_featured">
+    <input type="checkbox" name="is_featured"
+      id="ctrl_is_featured" value="1" {xen:checked {$contest.is_featured}} />
+    {xen:phrase lfc_contest_label_is_featured}
+  </dd>
+</dl>
+
+<dl class="ctrlUnit submitUnit">
+  <dt></dt>
+  <dd>
+    <input type="submit" value="{$savePhrase}" class="button primary" />
+  </dd>
+</dl>
+
+<input type="hidden" name="_xfToken" value="{$visitor.csrf_token_page}" />
+]]></template>
+    <template title="lfc_contest_form.css" version_id="1" version_string="1"><![CDATA[.lfc_contest_add .uploadedFile,
+.lfc_contest_edit .uploadedFile {
+  margin-right: 0;
+}
+]]></template>
+    <template title="lfc_contest_list" version_id="8" version_string="0.2.4"><![CDATA[<xen:include template="lfc_font_awesome" />
+
+<xen:title>{xen:phrase lfc_contests}</xen:title>
+
+<ul class="tabs Tabs" data-panes="#ContestPanes > li" data-history="on">
+  <li class="active">
+    <a href="{xen:link 'photo-contests', $contest}#contestOpen">
+      {xen:phrase lfc_contests_open}
+    </a>
+  </li>
+  <li>
+    <a href="{xen:link 'photo-contests', $contest}#contestClosed">
+      {xen:phrase lfc_contests_closed}
+    </a>
+  </li>
+</ul>
+
+<ul id="ContestPanes">
+  <li id="contestsOpen">
+    <div class="section">
+      <ol class="contestList SquareThumbs"
+        data-thumb-height="48"
+        data-thumb-selector=".preview">
+        <xen:if is="{$contestsOpen}">
+          <xen:foreach loop="$contestsOpen" value="$contest">
+            <xen:include template="lfc_contest_list_item" />
+          </xen:foreach>
+        <xen:else />
+          <li class="primaryContent">
+            {xen:phrase lfc_there_are_no_contests_to_display}
+          </li>
+        </xen:if>
+      </ol>
+    </div>
+  </li>
+  <li id="contestsClosed">
+    <div class="section">
+      <ol class="contestList SquareThumbs"
+        data-thumb-height="48"
+        data-thumb-selector=".preview">
+        <xen:if is="{$contestsClosed}">
+          <xen:foreach loop="$contestsClosed" value="$contest">
+            <xen:include template="lfc_contest_list_item" />
+          </xen:foreach>
+        <xen:else />
+          <li class="primaryContent">
+            {xen:phrase lfc_there_are_no_contests_to_display}
+          </li>
+        </xen:if>
+      </ol>
+    </div>
+  </li>
+</ul>
+
+<xen:if is="{$canPostContest}">
+  <xen:set var="$newContest">
+    <a href="{xen:link 'photo-contests/add'}" class="callToAction">
+      <span>{xen:phrase lfc_post_new_contest}</span>
+    </a>
+  </xen:set>
+  <xen:topctrl>{xen:raw $newContest}</xen:topctrl>
+
+  <div class="pageNavLinkGroup">
+    <div class="linkGroup">{xen:raw $newContest}</div>
+  </div>
+</xen:if>
+
+<xen:include template="share_page" />
+]]></template>
+    <template title="lfc_contest_list_item" version_id="14" version_string="0.5.0"><![CDATA[<xen:require css="lfc_contest_list_item.css" />
+<li class="primaryContent contestListItem {$contest.contest_state}">
+  <div class="thumbnail">
+    <xen:if is="{$contest.attachment}">
+      <a href="{xen:link 'photo-contests', $contest}" class="preview">
+        <img src="{$contest.attachment.thumbnailUrl}"
+          alt="{$contest.title}" />
+      </a>
+    </xen:if>
+  </div>
+
+  <div class="extra"><span class="bigNumber">{$contest.entry_count}</span></div>
+
+  <div class="contest">
+    <h3 class="title">
+      <a href="{xen:link 'photo-contests', $contest}"
+        class="title" title="{$contest.title}">
+        {$contest.title}
+      </a>
+    </h3>
+    <div class="contestInfo">
+      <div class="contestBlurb dimmed">
+        {xen:helper snippet, $contest.description, 100, {xen:array 'stripQuote=1'}}
+      </div>
+      <dl class="contestStats pairsInline">
+
+        <xen:if is="{$contest.isOpenToEntries}">
+          <dt><span class="contestInfoIcons"><i class="fa fa-sign-in fa-fw"></i></span> {xen:phrase lfc_contest_view_posting_opens_on}:</dt>
+          <dd>{xen:phrase lfc_yes}<dd>
+          <dt><span class="contestInfoIcons"><i class="fa fa-calendar fa-fw"></i></span> {xen:phrase lfc_contest_view_posting_closes_on}:</dt>
+          <dd>{xen:date $contest.posting_closes_on}<dd>
+        <xen:elseif is="{$contest.willOpenToEntries}" />
+          <dt><span class="contestInfoIcons"><i class="fa fa-calendar fa-fw"></i></span> {xen:phrase lfc_contest_view_posting_opens_on}:</dt>
+          <dd>{xen:date $contest.posting_opens_on}<dd>
+          <dt><span class="contestInfoIcons"><i class="fa fa-calendar fa-fw"></i></span> {xen:phrase lfc_contest_view_posting_closes_on}:</dt>
+          <dd>{xen:date $contest.posting_closes_on}<dd>
+        <xen:elseif is="{$contest.isClosedToEntries}" />
+          <dt><span class="contestInfoIcons"><i class="fa fa-sign-in fa-fw"></i></span> {xen:phrase lfc_contest_view_posting_opens_on}:</dt>
+          <dd>{xen:phrase lfc_no}<dd>
+          <dt><span class="contestInfoIcons"><i class="fa fa-calendar fa-fw"></i></span> {xen:phrase lfc_contest_view_posting_closes_on}:</dt>
+          <dd>{xen:phrase lfc_closed}<dd>
+        </xen:if>
+
+        <xen:if is="{$contest.isOpenToVotes}">
+          <dt><span class="contestInfoIcons"><i class="fa fa-bar-chart-o fa-fw"></i></span> {xen:phrase lfc_contest_view_voting_opens_on}:</dt>
+          <dd>{xen:phrase lfc_yes}<dd>
+          <dt><span class="contestInfoIcons"><i class="fa fa-calendar fa-fw"></i></span> {xen:phrase lfc_contest_view_voting_closes_on}:</dt>
+          <dd>{xen:date $contest.voting_closes_on}<dd>
+        <xen:elseif is="{$contest.willOpenToVotes}" />
+          <dt><span class="contestInfoIcons"><i class="fa fa-calendar fa-fw"></i></span> {xen:phrase lfc_contest_view_voting_opens_on}:</dt>
+          <dd>{xen:date $contest.voting_opens_on}<dd>
+          <dt><span class="contestInfoIcons"><i class="fa fa-calendar fa-fw"></i></span> {xen:phrase lfc_contest_view_voting_closes_on}:</dt>
+          <dd>{xen:date $contest.voting_closes_on}<dd>
+        <xen:elseif is="{$contest.isClosedToVotes}" />
+          <dt><span class="contestInfoIcons"><i class="fa fa-bar-chart-o fa-fw"></i></span> {xen:phrase lfc_contest_view_voting_opens_on}:</dt>
+          <dd>{xen:phrase lfc_no}<dd>
+          <dt><span class="contestInfoIcons"><i class="fa fa-calendar fa-fw"></i></span> {xen:phrase lfc_contest_view_voting_closes_on}:</dt>
+          <dd>{xen:phrase lfc_closed}<dd>
+        </xen:if>
+
+      </dl>
+    </div>
+  </div>
+</li>
+]]></template>
+    <template title="lfc_contest_list_item.css" version_id="6" version_string="0.2.2"><![CDATA[.contestListItem
+{
+  @property "contestListItem";
+  overflow: hidden;
+  zoom: 1;
+  @property "/contestListItem";
+}
+
+  .contestListItem.deleted {
+    opacity: 0.5;
+  }
+
+  .contestListItem .thumbnail
+  {
+    float: left;
+    background-color: {xen:property contentBackground};
+    padding: 2px;
+    border: 1px solid {xen:property primaryLighter};
+    border-radius: 4px;
+    width: 48px;
+    height: 48px;
+  }
+
+  .contestListItem .thumbnail a
+  {
+    display: block;
+    overflow: hidden;
+    width: 48px;
+    height: 48px;
+    position: relative;
+  }
+
+  .contestListItem .extra
+  {
+    @property "contestListItemExtra";
+    font-size: 11px;
+    float: right;
+    @property "/contestListItemExtra";
+  }
+
+    .contestListItem .extra .DateTime
+    {
+      display: block;
+    }
+
+    .contestListItem .extra .bigNumber
+    {
+      font-size: 250%;
+      color: {xen:property mutedTextColor};
+    }
+
+  .contestListItem .contest
+  {
+    @property "contestListItemContest";
+    margin-left: 65px;
+    @property "/contestListItemContest";
+  }
+
+  .contestListItem h3.title
+  {
+    @property "contestListItemUsername";
+    font-weight: bold;
+    font-size: 13pt;
+    margin-bottom: 3px;
+    @property "/contestListItemUsername";
+  }
+
+  .contestListItem .contestInfo
+  {
+    @property "contestListItemContestInfo";
+    font-size: 11px;
+    margin-bottom: 3px;
+    @property "/contestListItemContestInfo";
+  }
+
+
+    .contestListItem .contestStats dt,
+    .contestListItem .contestStats dd
+    {
+      white-space: nowrap;
+    }
+      .contestListItem .contestStats dd {
+        margin-right: 3px;
+      }
+
+    .contestListItem .contest .contestInfo
+    {
+      @property "contestListItemContent";
+      margin-top: 5px;
+      @property "/contestListItemContent";
+    }
+
+  .contestInfoIcons {
+    color: {xen:property primaryMedium};
+  }
+]]></template>
+    <template title="lfc_contest_undelete" version_id="1" version_string="1"><![CDATA[<xen:title>{xen:phrase lfc_undelete_contest}: {$contest.title}</xen:title>
+
+<xen:navigation>
+  <xen:breadcrumb href="{xen:link full:photo-contests, $contest}">
+    {$contest.title}
+  </xen:breadcrumb>
+</xen:navigation>
+
+<form action="{xen:link 'photo-contests/undelete', $contest}" method="post" class="xenForm formOverlay">
+
+  <dl class="ctrlUnit submitUnit">
+    <dt></dt>
+    <dd><input type="submit" value="{xen:phrase lfc_undelete_contest}" class="button primary" /></dd>
+  </dl>
+
+  <input type="hidden" name="_xfConfirm" value="1" />
+  <input type="hidden" name="_xfToken" value="{$visitor.csrf_token_page}" />
+</form>
+]]></template>
+    <template title="lfc_contest_view" version_id="20" version_string="0.6.5"><![CDATA[<xen:require css="lfc.css" />
+<xen:require css="lfc_contest_view.css" />
+<xen:include template="lfc_font_awesome" />
+
+<xen:title>{$contest.title} | {xen:phrase lfc_contests}</xen:title>
+
+<xen:h1>{$contest.title}</xen:h1>
+
+<xen:container var="$head.canonical">
+  <link rel="canonical" href="{xen:link 'canonical:photo-contests', $contest}" />
+</xen:container>
+
+<xen:container var="$head.openGraph"><xen:include template="open_graph_meta">
+  <xen:set var="$url">{xen:link 'canonical:photo-contests', $contest}</xen:set>
+  <xen:set var="$title">{$contest.title}</xen:set>
+  <xen:set var="$description">{xen:helper snippet, $contest.message, 155}</xen:set>
+  <xen:set var="$ogExtraHtml">
+    <meta property="og:image" content="{xen:helper fullurl, $contest.attachment.viewUrl, 1}" />
+  </xen:set>
+</xen:include></xen:container>
+
+<xen:navigation>
+  <xen:breadcrumb href="{xen:link photo-contests, $contest}">
+    {$contest.title}
+  </xen:breadcrumb>
+</xen:navigation>
+
+<xen:if is="{$contest.contest_state} == 'deleted'">
+  <xen:include template="lfc_view_status">
+    <xen:set var="$title">{xen:phrase lfc_contest_status}</xen:set>
+    <xen:set var="$deleted">true</xen:set>
+  </xen:include>
+</xen:if>
+
+<xen:if hascontent="true">
+  <div class="pageNavLinkGroup">
+    <div class="linkGroup SelectionCountContainer">
+      <div class="Popup">
+        <a rel="Menu">{xen:phrase lfc_contest_tools}</a>
+        <div class="Menu">
+          <div class="primaryContent menuHeader">
+            <h3>{xen:phrase lfc_contest_tools}</h3>
+          </div>
+          <ul class="secondaryContent blockLinksList">
+            <xen:contentcheck>
+              <xen:if is="{$contest.canEdit}">
+                <li>
+                  <a href="{xen:link 'photo-contests/edit', $contest}">
+                    {xen:phrase lfc_edit_contest}
+                  </a>
+                </li>
+              </xen:if>
+              <xen:if is="{$contest.canDelete}">
+                <li>
+                  <a href="{xen:link 'photo-contests/delete', $contest}" class="OverlayTrigger">
+                    {xen:phrase lfc_delete_contest}
+                  </a>
+                </li>
+              </xen:if>
+              <xen:if is="{$contest.canUnDelete}">
+                <li>
+                  <a href="{xen:link 'photo-contests/undelete', $contest}" class="OverlayTrigger">
+                    {xen:phrase lfc_undelete_contest}
+                  </a>
+                </li>
+              </xen:if>
+            </xen:contentcheck>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</xen:if>
+
+<ul class="tabs Tabs" data-panes="#ContestPanes > li" data-history="on">
+  <xen:if is="!{$contestEntriesHide}">
+    <li class="active">
+      <a href="{$requestPaths.requestUri}#contestEntries">
+        {xen:phrase lfc_contest_entries}
+      </a>
+    </li>
+    </xen:if>
+  <li>
+    <a href="{$requestPaths.requestUri}#contestDescription">
+      {xen:phrase lfc_contest_view_information}
+    </a>
+  </li>
+  <li class="contestStats">
+    <dl class="pairsInline">
+      <dt>
+        <span class="contestStats__icon">
+        <i class="fa fa-trophy fa-fw Tooltip" title="{xen:phrase lfc_contest_label_max_winners_count}"></i></span>
+      </dt>
+      <dd>{$contest.max_winners_count}<dd>
+
+      <dt>
+        <span class="contestStats__icon">
+        <i class="fa fa-user fa-fw Tooltip" title="{xen:phrase lfc_contest_label_max_entry_count}"></i></span>
+      </dt>
+      <dd>{$contest.max_entry_count}<dd>
+
+      <dt>
+        <span class="contestStats__icon">
+        <i class="fa fa-camera fa-fw Tooltip" title="{xen:phrase lfc_contest_label_max_images_per_entry}"></i></span>
+      </dt>
+      <dd>{$contest.max_images_per_entry}<dd>
+
+      <dt>
+        <span class="contestStats__icon">
+        <i class="fa fa-thumbs-up fa-fw Tooltip" title="{xen:phrase lfc_contest_label_max_votes_count}"></i></span>
+      </dt>
+      <dd>{$contest.max_votes_count}<dd>
+    </dl>
+  </li>
+</ul>
+
+<ul id="ContestPanes">
+  <xen:if is="!{$contestEntriesHide}">
+    <li id="contestEntries">
+      <div class="section contest_view">
+        <form action="{xen:link 'photo-contest-inline-mod/contest-entries/switch'}" method="post"
+          class="InlineModForm section"
+          data-cookieName="contestEntries"
+          data-controls="#InlineModControls"
+          >
+          <ol class="contestEntryList">
+            <xen:if is="{$contestEntries}">
+              <xen:foreach loop="$contestEntries" value="$contestEntry">
+                <xen:include template="lfc_contest_entry_list_item">
+                  <xen:map from="$contestEntry.attachment" to="$attachment" />
+                </xen:include>
+              </xen:foreach>
+            <xen:else />
+              <li class="primaryContent">
+                {xen:phrase lfc_there_are_no_contest_entries_to_display, 'link={xen:link 'photo-contests/add-contest-entry', $contest}'}
+              </li>
+            </xen:if>
+          </ol>
+
+          <xen:if is="{$inlineModOptions}">
+            <div class="sectionFooter InlineMod SelectionCountContainer">
+              <xen:if is="{$inlineModOptions}">
+                <xen:include template="lfc_inline_mod_controls_contest_entry" />
+              </xen:if>
+            </div>
+          </xen:if>
+
+          <input type="hidden" name="_xfToken" value="{$visitor.csrf_token_page}" />
+        </form>
+      </div>
+    </li>
+  </xen:if>
+  <li id="contestDescription">
+    <div class="section">
+      <xen:if is="{$contestEntriesHide}">
+        <p>{xen:phrase lfc_contest_status_hide_entries,
+        'date={xen:datetime $contest.voting_opens_on, html}'}</p>
+      </xen:if>
+      {xen:raw $contest.descriptionParsed}
+    </div>
+  </li>
+</ul>
+
+<xen:if is="{$canPostEntry} && {$contest.isOpenToEntries}">
+  <xen:set var="$newContestEntry">
+    <a href="{xen:link 'photo-contests/add-contest-entry', $contest}" class="callToAction">
+      <span>{xen:phrase lfc_post_new_contest_entry}</span>
+    </a>
+  </xen:set>
+  <xen:topctrl>{xen:raw $newContestEntry}</xen:topctrl>
+
+  <div class="contestEntryNavLinkGroup pageNavLinkGroup">
+    <div class="linkGroup">{xen:raw $newContestEntry}</div>
+  </div>
+</xen:if>
+
+<xen:include template="share_page" />
+]]></template>
+    <template title="lfc_contest_view.css" version_id="18" version_string="0.6.2"><![CDATA[li.contestStats {
+  float: right;
+}
+
+.contestStats__icon {
+  color: {xen:property primaryMedium};
+  cursor: pointer;
+}
+
+.contestStats dd {
+  margin-right: 3px;
+}
+
+.contestStats dd:last-child {
+  margin-right: 0;
+}
+]]></template>
+    <template title="lfc_font_awesome" version_id="2" version_string="0.1.4"><![CDATA[<link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.min.css" rel="stylesheet" />
+]]></template>
+    <template title="lfc_helper_usergroup_checkbox" version_id="12" version_string="0.4.0"><![CDATA[<ul>
+  <li>
+    <label for="ctrl_{$field}_user_group_type_all">
+      <input type="radio" name="{$field}_user_group_type" value="all" id="ctrl_{$field}_user_group_type_all" {xen:checked '{$allUserGroups}'} />
+      {xen:phrase all_user_groups}
+    </label>
+  </li>
+  <li>
+    <label for="ctrl_{$field}_user_group_type_sel">
+      <input type="radio" name="{$field}_user_group_type" value="sel" class="Disabler" id="ctrl_{$field}_user_group_type_sel" {xen:checked '!{$allUserGroups}'} />
+      {xen:phrase selected_user_groups}:
+    </label>
+    <ul id="ctrl_{$field}_user_group_type_sel_Disabler" class="disablerList">
+      <li>
+        <ul class="checkboxColumns">
+          <xen:foreach loop="$userGroups" value="$userGroup">
+            <li>
+              <label for="ctrl_{$field}_user_group_ids_{$userGroup.user_group_id}">
+                <input type="checkbox" name="{$field}_user_group_ids[]" value="{$userGroup.user_group_id}" id="ctrl_{$field}_user_group_ids_{$userGroup.user_group_id}" {xen:checked 'in_array({$userGroup.user_group_id}, {$selectedUserGroupIds})'} />
+                {$userGroup.title}
+              </label>
+            </li>
+          </xen:foreach>
+        </ul>
+        <label class="muted"><input type="checkbox" checked="checked" class="CheckAll" data-target="#ctrl_{$field}_user_group_type_sel_Disabler" /> <i>{xen:phrase select_all}</i></label>
+      </li>
+    </ul>
+  </li>
+</ul>
+]]></template>
+    <template title="lfc_inline_mod_contest_entry_delete" version_id="1" version_string="1"><![CDATA[<xen:title>{xen:phrase lfc_inline_moderation_delete_contest_entries}</xen:title>
+
+<form action="{xen:link 'photo-contest-inline-mod/contest-entries/delete'}"
+  method="post" class="xenForm formOverlay">
+  <p>{xen:phrase lfc_you_sure_you_want_to_delete_x_contest_entries, 'count={$contestEntryCount}'}</p>
+
+  <xen:include template="helper_deletion_type_unit" />
+
+  <dl class="ctrlUnit submitUnit">
+    <dt></dt>
+    <dd>
+      <input type="submit"
+        name="save"
+        value="{xen:phrase lfc_delete_contest_entries}"
+        accesskey="s"
+        class="button primary" />
+    </dd>
+  </dl>
+
+  <xen:foreach loop="$contestEntryIds" value="$contestEntryId">
+    <input type="hidden" name="contestEntries[]" value="{$contestEntryId}" />
+  </xen:foreach>
+
+  <input type="hidden" name="_xfConfirm" value="1" />
+  <input type="hidden" name="redirect" value="{$redirect}" />
+  <input type="hidden" name="_xfToken" value="{$visitor.csrf_token_page}" />
+</form>
+]]></template>
+    <template title="lfc_inline_mod_controls_contest_entry" version_id="1" version_string="0.1.3"><![CDATA[<xen:include template="inline_mod_controls">
+  <xen:set var="$text">{xen:phrase thread_moderation}</xen:set>
+  <xen:set var="$options">
+    <xen:if is="{$inlineModOptions.approve}">
+      <option value="approve">{xen:phrase lfc_approve_contest_entries}</option>
+    </xen:if>
+    <xen:if is="{$inlineModOptions.unapprove}">
+      <option value="unapprove">{xen:phrase lfc_unapprove_contest_entries}</option>
+    </xen:if>
+    <xen:if is="{$inlineModOptions.delete}">
+      <option value="delete">{xen:phrase lfc_delete_contest_entries}...</option>
+    </xen:if>
+    <xen:if is="{$inlineModOptions.undelete}">
+      <option value="undelete">{xen:phrase lfc_undelete_contest_entries}</option>
+    </xen:if>
+    <option value="deselect">{xen:phrase lfc_deselect_contest_entries}</option>
+  </xen:set>
+  <xen:set var="$checkboxTitle">{xen:phrase lfc_select_deselect_all_contest_entries_on_this_page}</xen:set>
+  <xen:set var="$selectedItemsPhrase">{xen:phrase lfc_selected_contest_entries}</xen:set>
+</xen:include>
+]]></template>
+    <template title="lfc_moderation_queue_list" version_id="1" version_string="0.1.1"><![CDATA[<xen:title>{xen:phrase moderation_queue}</xen:title>
+
+<xen:if is="{$queue}">
+  <form action="{xen:link 'photo-contests-moderation/save'}" method="post" class="xenForm">
+    <xen:foreach loop="$queue" value="$entry">
+      <fieldset>
+        <dl class="ctrlUnit">
+          <dt><label for="ctrl_{$entry.content_type}_{$entry.content_id}_title">{$entry.content.contentTypeTitle}:</label></dt>
+          <dd>
+            <xen:if is="{$entry.content.titleEdit}">
+              <input type="text" name="queue[{$entry.content_type}][{$entry.content_id}][title]" value="{$entry.content.title}" class="textCtrl"
+                id="ctrl_{$entry.content_type}_{$entry.content_id}_title"
+              />
+            <xen:else />
+              <a href="{$entry.content.link}">{xen:escape $entry.content.title, false}</a>
+            </xen:if>
+          </dd>
+        </dl>
+
+        <dl class="ctrlUnit">
+          <dt>{xen:phrase posted}:</dt>
+          <dd><xen:datetime time="$entry.content_date" /></dd>
+        </dl>
+
+        <dl class="ctrlUnit">
+          <dt>{xen:phrase posted_by}:</dt>
+          <dd><a{xen:if $entry.content.user.user_id, ' href="{xen:link members, $entry.content.user}"'}>{$entry.content.user.username}</a></dd>
+        </dl>
+
+        <dl class="ctrlUnit">
+          <dt>{xen:phrase action}:</dt>
+          <dd>
+            <ul>
+              <li><label for="ctrl_{$entry.content_type}_{$entry.content_id}_action_none">
+                <input type="radio" name="queue[{$entry.content_type}][{$entry.content_id}][action]" value="" id="ctrl_{$entry.content_type}_{$entry.content_id}_action_none" checked="checked" />
+                {xen:phrase do_nothing}
+              </label></li>
+
+              <li><label for="ctrl_{$entry.content_type}_{$entry.content_id}_action_approve">
+                <input type="radio" name="queue[{$entry.content_type}][{$entry.content_id}][action]" value="approve" id="ctrl_{$entry.content_type}_{$entry.content_id}_action_approve" />
+                {xen:phrase approve}
+              </label></li>
+
+              <li><label for="ctrl_{$entry.content_type}_{$entry.content_id}_action_delete">
+                <input type="radio" name="queue[{$entry.content_type}][{$entry.content_id}][action]" value="delete" id="ctrl_{$entry.content_type}_{$entry.content_id}_action_delete" />
+                {xen:phrase delete}
+              </label></li>
+            </ul>
+          </dd>
+        </dl>
+      </fieldset>
+    </xen:foreach>
+
+    <dl class="ctrlUnit submitUnit">
+      <dt></dt>
+      <dd><input type="submit" value="{xen:phrase update_moderation_queue}" class="button primary" /></dd>
+    </dl>
+
+    <input type="hidden" name="_xfToken" value="{$visitor.csrf_token_page}" />
+  </form>
+<xen:else />
+  <div>{xen:phrase moderation_queue_is_currently_empty}</div>
+</xen:if>
+]]></template>
+    <template title="lfc_moderator_bar" version_id="1" version_string="0.1.1"><![CDATA[<a href="/photo-contests-moderation" class="lfcModerationQueue modLink">
+  <span class="itemLabel">{xen:phrase lfc_contest_entries_awaiting_approval}:</span>
+  <span class="itemCount {xen:if {$session.lfcModerationCounts.total}, 'alert'}">{$session.lfcModerationCounts.total}</span>
+</a>
+]]></template>
+    <template title="lfc_multiple_attachment_upload_button" version_id="4" version_string="0.2.0"><![CDATA[<xen:if is="{$attachmentParams}">
+
+  <xen:require js="js/xenforo/attachment_editor.js" />
+  <xen:if is="{$xenOptions.swfUpload} AND {$visitor.enable_flash_uploader}">
+    <xen:require js="js/swfupload/swfupload.min.js" />
+  </xen:if>
+  <xen:require css="attachment_editor.css" />
+
+  <span id="AttachmentUploader" class="buttonProxy AttachmentUploader"
+    style="display: none"
+    data-placeholder="#SWFUploadPlaceHolder"
+    data-trigger="#ctrl_uploader"
+    data-postname="upload"
+    data-maxfilesize="{$attachmentConstraints.size}"
+    data-maxuploads="{$attachmentConstraints.count}"
+    data-extensions="{xen:helper implode, $attachmentConstraints.extensions, ','}"
+    data-action="{xen:link 'full:attachments/do-upload.json', '',
+      'hash={$attachmentParams.hash}',
+      'content_type={$attachmentParams.content_type}',
+      'key={$attachmentButtonKey}'}"
+    data-uniquekey="{$attachmentButtonKey}"
+    data-err-110="{xen:phrase uploaded_file_is_too_large}"
+    data-err-120="{xen:phrase uploaded_file_is_empty}"
+    data-err-130="{xen:phrase uploaded_file_does_not_have_an_allowed_extension}"
+    data-err-unknown="{xen:phrase upload_failed}">
+
+    <span id="SWFUploadPlaceHolder"></span>
+
+    <input type="button" value="{xen:if {$buttonText}, {xen:raw $buttonText}, {xen:phrase lfc_contest_entry_label_upload_file}}"
+      id="ctrl_uploader" class="button OverlayTrigger DisableOnSubmit"
+      data-href="{xen:link full:attachments/upload, '', '_params={$attachmentParams}', 'key={$attachmentButtonKey}'}"
+      data-hider="#AttachmentUploader" />
+    <span class="HiddenInput" data-name="_xfSessionId" data-value="{$sessionId}"></span>
+    <xen:foreach loop="$attachmentParams.content_data" key="$dataKey" value="$dataValue"><span class="HiddenInput" data-name="content_data[{$dataKey}]" data-value="{$dataValue}"></span>
+    </xen:foreach>
+  </span>
+
+  <noscript>
+    <a href="{xen:link 'attachments/upload', '', '_params={$attachmentParams}'}" class="button" target="_blank">{xen:if {$buttonText}, {xen:raw $buttonText}, {xen:phrase lfc_contest_entry_label_upload_file}}</a>
+  </noscript>
+
+</xen:if>
+]]></template>
+    <template title="lfc_search_form_contest_entry" version_id="14" version_string="0.5.0"><![CDATA[<xen:title>{xen:phrase lfc_search}</xen:title>
+
+<xen:navigation>
+  <xen:breadcrumb href="{xen:link full:search}">{xen:phrase search}</xen:breadcrumb>
+</xen:navigation>
+
+<form action="{xen:link 'search/search'}" method="post" class="xenForm AutoValidator"
+  data-optInOut="optIn"
+  data-redirect="true">
+
+  <xen:include template="search_form_tabs" />
+
+  <dl class="ctrlUnit">
+    <dt><label for="ctrl_keywords">{xen:phrase keywords}:</label></dt>
+    <dd>
+      <ul>
+        <li><input type="search" name="keywords" value="{$search.keywords}" results="0" class="textCtrl" id="ctrl_keywords" autofocus="true" /></li>
+        <li><label for="ctrl_title_only"><input type="checkbox" name="title_only" id="ctrl_title_only" value="1" {xen:checked '{$search.title_only}'} /> {xen:phrase search_titles_only}</label></li>
+      </ul>
+    </dd>
+  </dl>
+
+  <fieldset>
+    <dl class="ctrlUnit">
+      <dt><label for="ctrl_users">{xen:phrase posted_by_member}:</label></dt>
+      <dd>
+        <input type="text" name="users" value="{$search.users}" class="textCtrl AutoComplete" id="ctrl_users" />
+        <p class="explain">{xen:phrase separate_names_with_comma}</p>
+      </dd>
+    </dl>
+  </fieldset>
+
+  <fieldset>
+    <dl class="ctrlUnit">
+      <dt><label for="ctrl_date">{xen:phrase newer_than}:</label></dt>
+      <dd>
+        <input type="date" name="date" value="{$search.date}" class="textCtrl" id="ctrl_date" />
+      </dd>
+    </dl>
+  </fieldset>
+
+  <fieldset>
+    <dl class="ctrlUnit">
+      <dt></dt>
+      <dd><ul>
+        <li><label><input type="checkbox" name="is_resource" value="1" {xen:checked $search.is_resource} /> {xen:phrase lfc_search_only_descriptions}</label></li>
+      </ul></dd>
+    </dl>
+  </fieldset>
+
+  <xen:if is="{$supportsRelevance}">
+    <dl class="ctrlUnit">
+      <dt><label>{xen:phrase order_by}:</label></dt>
+      <dd>
+        <ul>
+          <li><label for="ctrl_order_date"><input type="radio" name="order" id="ctrl_order_date" value="date" checked="checked" /> {xen:phrase most_recent}</label></li>
+          <li><label for="ctrl_order_relevance"><input type="radio" name="order" id="ctrl_order_relevance" value="relevance" /> {xen:phrase relevance}</label></li>
+        </ul>
+      </dd>
+    </dl>
+  <xen:else />
+    <input type="hidden" name="order" value="date" />
+  </xen:if>
+
+  <dl class="ctrlUnit submitUnit">
+    <dt></dt>
+    <dd><input type="submit" value="{xen:phrase search}" accesskey="s" class="button primary" /></dd>
+  </dl>
+
+  <input type="hidden" name="type" value="{$searchType}" />
+  <input type="hidden" name="_xfToken" value="{$visitor.csrf_token_page}" />
+</form>
+]]></template>
+    <template title="lfc_search_form_tabs" version_id="14" version_string="0.5.0"><![CDATA[<li{xen:if "{$searchType} == 'lfc_entry'", ' class="active"'}><a href="{xen:link search, '', 'type=lfc_entry'}">{xen:phrase lfc_search}</a></li>
+]]></template>
+    <template title="lfc_search_result_contest_entry" version_id="14" version_string="0.5.0"><![CDATA[<li id="contest-entry-{$item.photo_contest_entry_id}" class="searchResult contestEntry primaryContent" data-author="{$item.username}">
+
+  <div class="listBlock posterAvatar">
+    <a href="{xen:link photo-contest-entries, $item}" class="avatar">
+      <img src="{$item.attachment.thumbnailUrl}"
+        width="48" height="48" alt="{$item.attachment.filename}">
+    </a>
+  </div>
+
+  <div class="listBlock main">
+    <div class="titleText">
+      <span class="contentType">{xen:phrase lfc_contest_entry}</span>
+      <h3 class="title{xen:if {$item.isNew}, ' new'}"><a href="{xen:link photo-contest-entries, $item}">{xen:helper highlight, $item.title, $search.search_query, 'highlight'}</a></h3>
+    </div>
+
+    <blockquote class="snippet">
+      <a href="{xen:link photo-contest-entries, $item}">{xen:helper snippet, $item.description, 150, {xen:array 'term={$search.search_query}', 'emClass=highlight', 'stripQuote=1'}}</a>
+    </blockquote>
+
+    <div class="meta">
+      <xen:if is="!{$item.contest.hide_authors}">
+        {xen:phrase lfc_contest_entry_by}: <xen:username user="$item" />,
+      </xen:if>
+      <xen:datetime time="{$item.updated_at}" />
+      {xen:phrase lfc_in_contest}: <a href="{xen:link photo-contests, $item.contest}">{$item.contest.title}</a>
+    </div>
+  </div>
+</li>
+]]></template>
+    <template title="lfc_tab_links" version_id="14" version_string="0.5.0"><![CDATA[<xen:if is="{$canSearch}">
+  <ul class="secondaryContent blockLinksList">
+    <li>
+      <a href="{xen:link search, '', 'type=lfc_entry'}">
+      {xen:phrase lfc_search}</a>
+    </li>
+  </ul>
+</xen:if>
+]]></template>
+    <template title="lfc_thread_winners_list" version_id="16" version_string="0.6.0"><![CDATA[{xen:phrase lfc_thread_winners}
+
+<ol>
+  <xen:foreach loop="$winningEntries" value="$winningEntry">
+    <li>
+      ({$winningEntry.likes} {xen:phrase lfc_thread_likes})
+      @{$winningEntry.username}
+      (<a href="{xen:link photo-contest-entries, $winningEntry}"
+        class="title Tooltip" title="{$winningEntry.title}">{xen:helper snippet, $winningEntry.title, 20}</a>)
+    </li>
+  </xen:foreach>
+</ol>
+]]></template>
+    <template title="lfc_thread_winners_list_tied" version_id="16" version_string="0.6.0"><![CDATA[{xen:phrase lfc_thread_winners}
+
+<ol>
+  <xen:foreach loop="$winningEntries" key="$likesCount" value="$group">
+    <li>
+      ({$likesCount} {xen:phrase lfc_thread_likes})
+      <ul>
+        <xen:foreach loop="$group" value="$winningEntry">
+          <li>
+            @{$winningEntry.username}
+            (<a href="{xen:link photo-contest-entries, $winningEntry}"
+              class="title Tooltip" title="{$winningEntry.title}">{xen:helper snippet, $winningEntry.title, 20}</a>)
+          </li>
+        </xen:foreach>
+      </ul>
+    </li>
+  </xen:foreach>
+</ol>
+]]></template>
+    <template title="lfc_view_status" version_id="14" version_string="0.5.0"><![CDATA[<xen:require css="lfc_view_status.css" />
+<xen:set var="$viewStatusHtml">
+  <xen:if hascontent="true">
+    <dl class="fotoContestViewStatus secondaryContent">
+      <dt>{$title}:</dt>
+      <xen:contentcheck>
+        <xen:if is="{$deleted}">
+          <dd class="deletedAlert">
+            <span class="icon Tooltip" title="{xen:phrase deleted}" data-tipclass="iconTip"></span>
+            {xen:phrase removed_from_public_view}
+          </dd>
+        </xen:if>
+      </xen:contentcheck>
+    </dl>
+  </xen:if>
+</xen:set>
+{xen:raw $viewStatusHtml}
+]]></template>
+    <template title="lfc_view_status.css" version_id="1" version_string="1"><![CDATA[.fotoContestViewStatus
+{
+  border: 1px solid {xen:property primaryLighterStill};
+  border-radius: 5px;
+  font-size: 11px;
+  margin: 10px 0;
+  padding: 5px;
+  line-height: 16px;
+  background-image: url('{xen:property imagePath}/xenforo/gradients/form-button-white-25px.png');
+}
+
+  .fotoContestViewStatus dt
+  {
+    color: {xen:property primaryLight};
+    display: inline;
+  }
+
+  .fotoContestViewStatus dd
+  {
+    color: {xen:property primaryDark};
+    font-weight: bold;
+    display: inline;
+  }
+
+    .fotoContestViewStatus .icon
+    {
+      float: right;
+      width: 16px;
+      height: 16px;
+      margin-left: 5px;
+      background: url('{xen:property imagePath}/xenforo/xenforo-ui-sprite.png') no-repeat -1000px -1000px;
+    }
+
+      .fotoContestViewStatus .deletedAlert .icon { background-position: -64px -32px; }
+]]></template>
+    <template title="lfc_widget_latest_contests" version_id="4" version_string="0.2.0"><![CDATA[<xen:require css="lfc_widget_latest_contests.css" />
+<ul>
+  <xen:foreach loop="$contests" value="$contest">
+    <li>
+      <xen:if is="{$contest.attachment}">
+        <a href="{xen:link 'photo-contests', $contest}" class="contestImage">
+          <img src="{$contest.attachment.thumbnailUrl}"
+            alt="{$contest.title}" width="38" height="38" />
+        </a>
+      </xen:if>
+
+      <a href="{xen:link 'photo-contests', $contest}"
+        class="title" title="{$contest.title}">
+        {$contest.title}
+      </a>
+
+      <div class="pairsJustified">
+        <xen:if is="{$contest.isOpenToEntries}">
+          <dl>
+            <dt>{xen:phrase lfc_contest_view_posting_opens_on}:</dt>
+            <dd>{xen:phrase lfc_yes}<dd>
+          </dl>
+          <dl>
+            <dt>{xen:phrase lfc_contest_view_posting_closes_on}:</dt>
+            <dd>{xen:datetime $contest.posting_closes_on}<dd>
+          </dl>
+        <xen:elseif is="{$contest.willOpenToEntries}" />
+          <dl>
+            <dt>{xen:phrase lfc_contest_view_posting_opens_on}:</dt>
+            <dd>{xen:datetime $contest.posting_opens_on}<dd>
+          </dl>
+          <dl>
+            <dt>{xen:phrase lfc_contest_view_posting_closes_on}:</dt>
+            <dd>{xen:datetime $contest.posting_closes_on}<dd>
+          </dl>
+        <xen:elseif is="{$contest.isClosedToEntries}" />
+          <dl>
+            <dt>{xen:phrase lfc_contest_view_posting_opens_on}:</dt>
+            <dd>{xen:phrase lfc_no}<dd>
+          </dl>
+          <dl>
+            <dt>{xen:phrase lfc_contest_view_posting_closes_on}:</dt>
+            <dd>{xen:phrase lfc_closed}<dd>
+          </dl>
+        </xen:if>
+      </div>
+    </li>
+  </xen:foreach>
+</ul>
+]]></template>
+    <template title="lfc_widget_latest_contests.css" version_id="4" version_string="0.2.0"><![CDATA[.FotoContest_WidgetRenderer_LatestContests li {
+  margin: 5px 0;
+  overflow: hidden;
+  zoom: 1;
+}
+
+.FotoContest_WidgetRenderer_LatestContests .contestImage {
+  margin-right: 5px;
+  float: left;
+  width: 32px;
+  height: 32px;
+  width: auto;
+  height: auto;
+}
+
+.FotoContest_WidgetRenderer_LatestContests .contestImage img {
+  background-color: {xen:property contentBackground};
+  background-repeat: no-repeat;
+  background-position: 2px 2px;
+  padding: 2px;
+  border: 1px solid {xen:property primaryLighter};
+  border-radius: 4px;
+  display: block;
+  text-indent: 1000px;
+  overflow: hidden;
+  white-space: nowrap;
+  word-wrap: normal;
+}
+]]></template>
+    <template title="lfc_widget_latest_entries" version_id="18" version_string="0.6.2"><![CDATA[<xen:require css="lfc_widget_latest_entries.css" />
+<ul class="entries">
+  <xen:foreach loop="$entries" value="$entry">
+    <li class="entries__entry">
+      <xen:if is="{$entry.attachment}">
+        <a href="{xen:link 'photo-contests', $entry.contest}" class="entries__entry__link Tooltip" title="{$entry.title}">
+          <img src="{xen:helper lfc_thumb, $entry.attachment,
+            $thumbSize}" alt="{$attachment.filename}" class="entries__entry__image" />
+        </a>
+      </xen:if>
+    </li>
+  </xen:foreach>
+</ul>
+]]></template>
+    <template title="lfc_widget_latest_entries.css" version_id="17" version_string="0.6.1"><![CDATA[{xen:helper clearfix, '.FotoContest_WidgetRenderer_LatestEntries .entries'}
+
+.FotoContest_WidgetRenderer_LatestEntries .entries__entry {
+  float: left;
+  margin-right: 5px;
+  margin-top: 5px;
+}
+
+.FotoContest_WidgetRenderer_LatestEntries .entries__entry__image {
+  background-color: {xen:property contentBackground};
+  padding: 2px;
+  border: 1px solid {xen:property primaryLighter};
+  border-radius: 4px;
+  display: block;
+}
+]]></template>
+    <template title="lfc_widget_latest_entries.htm" version_id="17" version_string="0.6.1"><![CDATA[]]></template>
+    <template title="news_feed_item_lfc_entry_like" version_id="2" version_string="0.1.4"><![CDATA[<h3 class="description">
+  <xen:if is="{$content.user_id} == {$visitor.user_id}">
+  {xen:phrase lfc_x_liked_your_contest_entry,
+    'name={xen:helper username, $user, 'primaryText'}',
+    'title=<a href="{xen:link photo-contest-entries, $content}">{$content.title}</a>'}
+  <xen:else />
+  {xen:phrase lfc_x_liked_ys_contest_entry,
+    'name={xen:helper username, $user, 'primaryText'}',
+    'posterParams=href="{xen:link members, $content}"', 'poster={$content.username}',
+    'title=<a href="{xen:link photo-contest-entries, $content}">{$content.title}</a>'}
+  </xen:if>
+</h3>
+<p class="snippet">{xen:helper snippet, $content.description, 100, {xen:array 'stripQuote=1'}}</p>
+]]></template>
+  </templates>
+  <public_template_modifications>
+    <modification template="PAGE_CONTAINER" modification_key="lfcPAGE_CONTAINER" description="Add moderation queue count for contest entries" execution_order="10" enabled="1" action="str_replace">
+      <find><![CDATA[{$visitor.is_admin}]]></find>
+      <replace><![CDATA[$0 || {$session.lfcModerationCounts.total}]]></replace>
+    </modification>
+    <modification template="footer" modification_key="lfc_footer" description="Adds copyright notice to footer" execution_order="10" enabled="1" action="str_replace">
+      <find><![CDATA[{xen:phrase extra_copyright}]]></find>
+      <replace><![CDATA[| <a href="https://github.com/FotoContest/FotoContest" class="concealed">FotoContest<span> &copy;2014</span></a> $0]]></replace>
+    </modification>
+  </public_template_modifications>
+  <bb_code_media_sites/>
+  <bb_codes/>
+</addon>
